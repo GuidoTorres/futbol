@@ -1,0 +1,37 @@
+{
+  "tabs": {
+    "matches": "Partidos",
+    "leagues": "Ligas",
+    "favorites": "Favoritos",
+    "calendar": "Calendario"
+  },
+  "matches": {
+    "noMatches": "No hay partidos programados para este día",
+    "browseMatches": "Explorar Partidos",
+    "matchEvents": "Eventos del Partido",
+    "matchStats": "Estadísticas del Partido",
+    "detailedStats": "Estadísticas Detalladas",
+    "lineups": "Alineaciones",
+    "live": "EN VIVO",
+    "upcoming": "PRÓXIMO"
+  },
+  "favorites": {
+    "noFavorites": "Sin Favoritos",
+    "addMatchesAndTeams": "Añade partidos y equipos a tus favoritos para verlos aquí"
+  },
+  "leagues": {
+    "teams": "Equipos",
+    "matches": "Partidos",
+    "topScorer": "Máximo Goleador",
+    "goals": "Goles",
+    "viewFullTable": "Ver Tabla Completa",
+    "leagueStats": "Estadísticas de Liga",
+    "totalGoals": "Goles Totales",
+    "goalsPerMatch": "Goles por Partido",
+    "cleanSheets": "Porterías a Cero",
+    "penalties": "Penaltis",
+    "goalsPerMatchday": "Goles por Jornada",
+    "topScorers": "Máximos Goleadores",
+    "standings": "Clasificación"
+  }
+}
