@@ -1012,8 +1012,7 @@ export default function MatchDetailScreen() {
       <ScrollView style={styles.contentContainer}>
         {renderContent()}
       </ScrollView>
-    </TouchableOpacity>
-  </Link>
+    </View>
   );
 }
 
