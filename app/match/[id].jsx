@@ -1,8 +1,3 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions, SafeAreaView } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import { VictoryPie, VictoryChart, VictoryLine, VictoryAxis, VictoryLegend } from 'victory-native';
-
 const MATCH_DATA = {
   homeTeam: {
     name: 'Real Madrid',
@@ -1017,8 +1012,8 @@ export default function MatchDetailScreen() {
       <ScrollView style={styles.contentContainer}>
         {renderContent()}
       </ScrollView>
-    </View>
-
+    </TouchableOpacity>
+  </Link>
   );
 }
 
