@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions, SafeAreaView } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { VictoryPie, VictoryChart, VictoryLine, VictoryAxis, VictoryLegend } from 'victory-native';
 
@@ -54,7 +54,7 @@ export default function LeagueDetailScreen() {
     </TouchableOpacity>
   );
 
-  const renderFormBadge = (result: string) => {
+  const renderFormBadge = (result) => {
     const backgroundColor = result === 'V' ? '#00ff87' : result === 'E' ? '#ffd700' : '#ff4d4d';
     return (
       <View style={[styles.formBadge, { backgroundColor }]}>
@@ -190,59 +190,67 @@ export default function LeagueDetailScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* League Header - siempre visible */}
-      <View style={styles.header}>
-        <Image source={{ uri: league.logo }} style={styles.leagueLogo} />
-        <View style={styles.headerInfo}>
-          <Text style={styles.leagueName}>{league.name}</Text>
-          <Text style={styles.seasonText}>{league.season}</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* League Header - siempre visible */}
+        <View style={styles.header}>
+          <Image source={{ uri: league.logo }} style={styles.leagueLogo} />
+          <View style={styles.headerInfo}>
+            <Text style={styles.leagueName}>{league.name}</Text>
+            <Text style={styles.seasonText}>{league.season}</Text>
+          </View>
         </View>
-      </View>
 
-      {/* Tabs Navigation */}
-      <View style={styles.tabsContainer}>
-        <TabButton 
-          title="Estadísticas" 
-          active={activeTab === 'estadisticas'} 
-          onPress={() => setActiveTab('estadisticas')}
-        />
-        <TabButton 
-          title="Tendencias" 
-          active={activeTab === 'tendencias'} 
-          onPress={() => setActiveTab('tendencias')}
-        />
-        <TabButton 
-          title="Goleadores" 
-          active={activeTab === 'goleadores'} 
-          onPress={() => setActiveTab('goleadores')}
-        />
-        <TabButton 
-          title="Clasificación" 
-          active={activeTab === 'clasificacion'} 
-          onPress={() => setActiveTab('clasificacion')}
-        />
-      </View>
+        {/* Tabs Navigation */}
+        <View style={styles.tabsContainer}>
+          <TabButton 
+            title="Estadísticas" 
+            active={activeTab === 'estadisticas'} 
+            onPress={() => setActiveTab('estadisticas')}
+          />
+          <TabButton 
+            title="Tendencias" 
+            active={activeTab === 'tendencias'} 
+            onPress={() => setActiveTab('tendencias')}
+          />
+          <TabButton 
+            title="Goleadores" 
+            active={activeTab === 'goleadores'} 
+            onPress={() => setActiveTab('goleadores')}
+          />
+          <TabButton 
+            title="Clasificación" 
+            active={activeTab === 'clasificacion'} 
+            onPress={() => setActiveTab('clasificacion')}
+          />
+        </View>
 
-      {/* Tab Content */}
-      <ScrollView style={styles.contentContainer}>
-        {renderContent()}
-      </ScrollView>
-    </View>
+        {/* Tab Content */}
+        <ScrollView style={styles.contentContainer}>
+          {renderContent()}
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#121212',
+  },
   container: {
     flex: 1,
     backgroundColor: '#121212',
+    paddingTop: 16,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1a1a1a',
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
   },
   leagueLogo: {
     width: 64,
@@ -443,5 +451,4 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 12,
     fontFamily: 'Inter_600SemiBold',
-  },
-});
+  }})

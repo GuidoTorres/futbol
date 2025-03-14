@@ -1,24 +1,7 @@
 import { useState, useEffect } from 'react';
 
-// Tipos
-export interface Team {
-  id: number;
-  name: string;
-  logo: string;
-  score?: number;
-}
-
-export interface Match {
-  id: number;
-  league: string;
-  homeTeam: Team;
-  awayTeam: Team;
-  time: Date;
-  status: string;
-}
-
 // Datos de ejemplo
-const MOCK_MATCHES: Match[] = [
+const MOCK_MATCHES = [
   {
     id: 1,
     league: 'La Liga',
@@ -94,33 +77,17 @@ const MOCK_MATCHES: Match[] = [
 ];
 
 export function useMatches() {
-  const [matches, setMatches] = useState<Match[]>(MOCK_MATCHES);
+  const [matches, setMatches] = useState(MOCK_MATCHES);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState(null);
 
-  const getMatchesForDate = (date: Date) => {
+  const getMatchesForDate = (date) => {
     const formattedDate = date.toISOString().split('T')[0];
-    // En una aplicación real, harías una llamada a la API para obtener los partidos de esta fecha
-    // Por ahora simulamos diferentes resultados basados en la fecha
-    
-    // Solo para demostración: muestra partidos reales solo en la fecha actual
-    const isToday = new Date().toISOString().split('T')[0] === formattedDate;
-    
-    if (isToday) {
-      return MOCK_MATCHES.slice(0, 3); // Los primeros 3 partidos
-    } else if (date.getDate() % 2 === 0) {
-      // Días pares
-      return MOCK_MATCHES.slice(1, 3); // 2 partidos diferentes
-    } else if (date.getDate() % 3 === 0) {
-      // Días divisibles por 3
-      return MOCK_MATCHES.slice(2, 4); // Últimos 2 partidos
-    } else if (date.getDate() % 5 === 0) {
-      // Días divisibles por 5
-      return []; // Sin partidos
-    } else {
-      // Otros días
-      return [MOCK_MATCHES[3]]; // Solo último partido
-    }
+    // Lógica simplificada para demostración
+    return MOCK_MATCHES.filter(match => {
+      const matchDate = match.time.toISOString().split('T')[0];
+      return matchDate === formattedDate;
+    });
   }
 
   return {

@@ -1,84 +1,35 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions, SafeAreaView } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { VictoryChart, VictoryBar, VictoryAxis, VictoryGroup, VictoryLegend } from 'victory-native';
-import Svg, { Circle, Line, Rect } from 'react-native-svg';
+import { VictoryPie, VictoryChart, VictoryLine, VictoryAxis, VictoryLegend } from 'victory-native';
 
 const MATCH_DATA = {
-  id: '1',
-  league: 'La Liga',
   homeTeam: {
     name: 'Real Madrid',
-    logo: 'https://images.unsplash.com/photo-1610901157620-340856d0a50f?w=64&h=64&fit=crop',
-    score: 2,
+    score: 1,
     formation: '4-3-3',
     coach: {
-      name: 'Carlo Ancelotti',
-      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop',
+      name: 'Hansi ',
+      image: 'https://images.unsplash.com/photo-1615572768141-290c2d38c0b5?w=64&h=64&fit=crop',
       nationality: 'Italia',
       age: 64
     },
     players: [
       // Portero
-      { id: 1, name: 'Courtois', number: 1, position: 'POR', x: 50, y: 93, image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=64&h=64&fit=crop' },
+      { id: 1, name: 'Ter Stegen', number: 1, position: 'POR', x: 50, y: 10, image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=64&h=64&fit=crop' },
       // Defensa - 4 defensas
-      { id: 2, name: 'Carvajal', number: 2, position: 'LD', x: 85, y: 80, image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop' },
-      { id: 3, name: 'Militão', number: 3, position: 'DFC', x: 65, y: 80, image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop' },
-      { id: 4, name: 'Alaba', number: 4, position: 'DFC', x: 35, y: 80, image: 'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=64&h=64&fit=crop' },
-      { id: 5, name: 'Mendy', number: 5, position: 'LI', x: 15, y: 80, image: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=64&h=64&fit=crop' },
+      { id: 2, name: 'Koundé', number: 23, position: 'LD', x: 20, y: 25, image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=64&h=64&fit=crop' },
+      { id: 3, name: 'Araújo', number: 4, position: 'DFC', x: 40, y: 25, image: 'https://images.unsplash.com/photo-1507038732509-8b1a9623223a?w=64&h=64&fit=crop' },
+      { id: 4, name: 'Christensen', number: 15, position: 'DFC', x: 60, y: 25, image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop' },
+      { id: 5, name: 'Baldé', number: 3, position: 'LI', x: 80, y: 25, image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop' },
       // Mediocampo - 3 centrocampistas
-      { id: 6, name: 'Kroos', number: 8, position: 'MC', x: 30, y: 65, image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop' },
-      { id: 7, name: 'Casemiro', number: 14, position: 'MCD', x: 50, y: 65, image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=64&h=64&fit=crop' },
-      { id: 8, name: 'Modric', number: 10, position: 'MC', x: 70, y: 65, image: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=64&h=64&fit=crop' },
+      { id: 6, name: 'Pedri', number: 8, position: 'MC', x: 30, y: 40, image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop' },
+      { id: 7, name: 'Busquets', number: 5, position: 'MCD', x: 50, y: 40, image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=64&h=64&fit=crop' },
+      { id: 8, name: 'De Jong', number: 21, position: 'MC', x: 70, y: 40, image: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=64&h=64&fit=crop' },
       // Delanteros - 3 delanteros
-      { id: 9, name: 'Vinicius', number: 20, position: 'EI', x: 25, y: 50, image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop' },
-      { id: 10, name: 'Benzema', number: 9, position: 'DC', x: 50, y: 50, image: 'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=64&h=64&fit=crop' },
-      { id: 11, name: 'Rodrygo', number: 21, position: 'ED', x: 75, y: 50, image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop' },
-    ],
-    substitutes: [
-      { id: 12, name: 'Lunin', number: 13, position: 'POR', image: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=64&h=64&fit=crop' },
-      { id: 13, name: 'Nacho', number: 6, position: 'DFC', image: 'https://images.unsplash.com/photo-1618077360395-f3068be8e001?w=64&h=64&fit=crop' },
-      { id: 14, name: 'Vallejo', number: 26, position: 'DFC', image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=64&h=64&fit=crop' },
-      { id: 15, name: 'Camavinga', number: 25, position: 'MC', image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=64&h=64&fit=crop' },
-      { id: 16, name: 'Valverde', number: 15, position: 'MC', image: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=64&h=64&fit=crop' },
-      { id: 17, name: 'Ceballos', number: 19, position: 'MC', image: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=64&h=64&fit=crop' },
-      { id: 18, name: 'Asensio', number: 11, position: 'ED', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=64&h=64&fit=crop' },
-      { id: 19, name: 'Hazard', number: 7, position: 'EI', image: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=64&h=64&fit=crop' },
-      { id: 20, name: 'Mariano', number: 24, position: 'DC', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop' }
-    ],
-    staffMembers: [
-      { name: 'Davide Ancelotti', role: 'Asistente', image: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=64&h=64&fit=crop' },
-      { name: 'Antonio Pintus', role: 'Preparador Físico', image: 'https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=64&h=64&fit=crop' },
-      { name: 'Luis Llopis', role: 'Entrenador de Porteros', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64&h=64&fit=crop' }
-    ]
-  },
-  awayTeam: {
-    name: 'Barcelona',
-    logo: 'https://images.unsplash.com/photo-1608831540955-35094d48694a?w=64&h=64&fit=crop',
-    score: 1,
-    formation: '4-3-3',
-    coach: {
-      name: 'Xavi Hernández',
-      image: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=64&h=64&fit=crop',
-      nationality: 'España',
-      age: 43
-    },
-    players: [
-      // Portero
-      { id: 1, name: 'Ter Stegen', number: 1, position: 'POR', x: 50, y: 7, image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=64&h=64&fit=crop' },
-      // Defensa - 4 defensas
-      { id: 2, name: 'Koundé', number: 23, position: 'LD', x: 85, y: 20, image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=64&h=64&fit=crop' },
-      { id: 3, name: 'Araújo', number: 4, position: 'DFC', x: 65, y: 20, image: 'https://images.unsplash.com/photo-1507038732509-8b1a9623223a?w=64&h=64&fit=crop' },
-      { id: 4, name: 'Christensen', number: 15, position: 'DFC', x: 35, y: 20, image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop' },
-      { id: 5, name: 'Baldé', number: 3, position: 'LI', x: 15, y: 20, image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop' },
-      // Mediocampo - 3 centrocampistas
-      { id: 6, name: 'Pedri', number: 8, position: 'MC', x: 30, y: 35, image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop' },
-      { id: 7, name: 'Busquets', number: 5, position: 'MCD', x: 50, y: 35, image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=64&h=64&fit=crop' },
-      { id: 8, name: 'De Jong', number: 21, position: 'MC', x: 70, y: 35, image: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=64&h=64&fit=crop' },
-      // Delanteros - 3 delanteros
-      { id: 9, name: 'Ferran', number: 11, position: 'EI', x: 25, y: 50, image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop' },
+      { id: 9, name: 'Ferran', number: 11, position: 'EI', x: 30, y: 50, image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop' },
       { id: 10, name: 'Lewandowski', number: 9, position: 'DC', x: 50, y: 50, image: 'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=64&h=64&fit=crop' },
-      { id: 11, name: 'Dembélé', number: 7, position: 'ED', x: 75, y: 50, image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop' },
+      { id: 11, name: 'Dembélé', number: 7, position: 'ED', x: 70, y: 50, image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop' },
     ],
     substitutes: [
       { id: 12, name: 'Iñaki Peña', number: 13, position: 'POR', image: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=64&h=64&fit=crop' },
@@ -111,7 +62,7 @@ const MATCH_DATA = {
     passAccuracy: { home: 86, away: 83 },
   },
   events: [
-    { time: '23', type: 'goal', team: 'home', player: 'Vinicius Jr.', assist: 'Modric', description: 'Disparo desde fuera del área' },
+    { time: '23', type: 'goal', team: 'home', player: 'Vinicius Jr.', player: 'Modric', description: 'Disparo desde fuera del área' },
     { time: '31', type: 'substitution', team: 'away', playerOut: 'Christensen', playerIn: 'Eric García', reason: 'Lesión' },
     { time: '45+2', type: 'yellow', team: 'away', player: 'Araújo', description: 'Falta táctica sobre Vinicius' },
     { time: '52', type: 'yellow', team: 'home', player: 'Casemiro', description: 'Falta sobre Pedri' },
@@ -130,9 +81,8 @@ const { width: screenWidth } = Dimensions.get('window');
 // Componente para el campo de fútbol con las alineaciones
 function FootballField({ homeTeam, awayTeam }) {
   const fieldWidth = screenWidth - 32;
-  // Hacemos la cancha más alta para que las formaciones tengan más espacio vertical
-  const fieldHeight = fieldWidth * 1.8;
-  const playerSize = 30; // Reducido para que quepan mejor todos los jugadores
+  const fieldHeight = fieldWidth * 1.5; // Reduced from 1.8 for better proportions
+  const playerSize = 25; // Reduced from 30 for better scaling
   
   // Función para crear líneas de formación
   const renderFormationLines = (players, isHome) => {
@@ -149,9 +99,9 @@ function FootballField({ homeTeam, awayTeam }) {
         {goalkeeper && (
           <Line
             x1={fieldWidth * 0.05}
-            y1={isHome ? fieldHeight * 0.93 : fieldHeight * 0.07}
+            y1={isHome ? fieldHeight * 0.90 : fieldHeight * 0.10}
             x2={fieldWidth * 0.95}
-            y2={isHome ? fieldHeight * 0.93 : fieldHeight * 0.07}
+            y2={isHome ? fieldHeight * 0.90 : fieldHeight * 0.10}
             stroke={isHome ? "#00ff8755" : "#ff4d4d55"}
             strokeWidth="1"
             strokeDasharray="5,3"
@@ -162,9 +112,9 @@ function FootballField({ homeTeam, awayTeam }) {
         {defenders.length > 0 && (
           <Line
             x1={fieldWidth * 0.05}
-            y1={isHome ? fieldHeight * 0.80 : fieldHeight * 0.20}
+            y1={isHome ? fieldHeight * 0.75 : fieldHeight * 0.25}
             x2={fieldWidth * 0.95}
-            y2={isHome ? fieldHeight * 0.80 : fieldHeight * 0.20}
+            y2={isHome ? fieldHeight * 0.75 : fieldHeight * 0.25}
             stroke={isHome ? "#00ff8755" : "#ff4d4d55"}
             strokeWidth="1"
             strokeDasharray="5,3"
@@ -175,9 +125,9 @@ function FootballField({ homeTeam, awayTeam }) {
         {midfielders.length > 0 && (
           <Line
             x1={fieldWidth * 0.05}
-            y1={isHome ? fieldHeight * 0.65 : fieldHeight * 0.35}
+            y1={isHome ? fieldHeight * 0.60 : fieldHeight * 0.40}
             x2={fieldWidth * 0.95}
-            y2={isHome ? fieldHeight * 0.65 : fieldHeight * 0.35}
+            y2={isHome ? fieldHeight * 0.60 : fieldHeight * 0.40}
             stroke={isHome ? "#00ff8755" : "#ff4d4d55"}
             strokeWidth="1"
             strokeDasharray="5,3"
@@ -188,9 +138,9 @@ function FootballField({ homeTeam, awayTeam }) {
         {forwards.length > 0 && (
           <Line
             x1={fieldWidth * 0.05}
-            y1={fieldHeight * 0.50}
+            y1={isHome ? fieldHeight * 0.50 : fieldHeight * 0.50}
             x2={fieldWidth * 0.95}
-            y2={fieldHeight * 0.50}
+            y2={isHome ? fieldHeight * 0.50 : fieldHeight * 0.50}
             stroke={isHome ? "#00ff8755" : "#ff4d4d55"}
             strokeWidth="1"
             strokeDasharray="5,3"
@@ -198,6 +148,50 @@ function FootballField({ homeTeam, awayTeam }) {
         )}
       </>
     );
+  };
+
+  // Función para calcular posiciones de jugadores según su rol
+  const calculatePlayerPositions = (players, isHome) => {
+    // Agrupar jugadores por posición
+    const goalkeeper = players.find(p => p.position === 'POR');
+    const defenders = players.filter(p => p.position.includes('D') || p.position.includes('LI') || p.position.includes('LD'));
+    const midfielders = players.filter(p => p.position.includes('M'));
+    const forwards = players.filter(p => p.position.includes('E') || p.position === 'DC');
+    
+    // Actualizar posición del portero
+    if (goalkeeper) {
+      goalkeeper.x = 50; // Centrado horizontalmente
+      goalkeeper.y = isHome ? 90 : 10; // Posición vertical según equipo
+    }
+    
+    // Distribuir defensas uniformemente
+    defenders.forEach((player, index) => {
+      const totalPlayers = defenders.length;
+      // Calcular posición horizontal (distribuidos uniformemente entre 20% y 80%)
+      player.x = 20 + (60 / (totalPlayers + 1)) * (index + 1);
+      // Posición vertical según equipo
+      player.y = isHome ? 75 : 25;
+    });
+    
+    // Distribuir centrocampistas uniformemente
+    midfielders.forEach((player, index) => {
+      const totalPlayers = midfielders.length;
+      // Calcular posición horizontal (distribuidos uniformemente entre 20% y 80%)
+      player.x = 20 + (60 / (totalPlayers + 1)) * (index + 1);
+      // Posición vertical según equipo
+      player.y = isHome ? 60 : 40;
+    });
+    
+    // Distribuir delanteros uniformemente
+    forwards.forEach((player, index) => {
+      const totalPlayers = forwards.length;
+      // Calcular posición horizontal (distribuidos uniformemente entre 20% y 80%)
+      player.x = 20 + (60 / (totalPlayers + 1)) * (index + 1);
+      // Posición vertical - ambos equipos en el centro
+      player.y = 50;
+    });
+    
+    return players;
   };
 
   const renderPlayer = (player, isHome) => (
@@ -239,6 +233,7 @@ function FootballField({ homeTeam, awayTeam }) {
 
   return (
     <View style={[styles.field, { width: fieldWidth, height: fieldHeight }]}>
+      <TouchableOpacity>
       <Svg width={fieldWidth} height={fieldHeight}>
         {/* Field outline */}
         <Rect
@@ -294,19 +289,19 @@ function FootballField({ homeTeam, awayTeam }) {
         
         {/* Penalty areas */}
         <Rect
-          x={fieldWidth * 0.15}
+          x={fieldWidth * 0.25}
           y="0"
-          width={fieldWidth * 0.7}
-          height={fieldHeight * 0.2}
+          width={fieldWidth * 0.5}
+          height={fieldHeight * 0.15}
           stroke="#fff"
           strokeWidth="2"
           fill="none"
         />
         <Rect
-          x={fieldWidth * 0.15}
-          y={fieldHeight * 0.8}
-          width={fieldWidth * 0.7}
-          height={fieldHeight * 0.2}
+          x={fieldWidth * 0.25}
+          y={fieldHeight * 0.85}
+          width={fieldWidth * 0.5}
+          height={fieldHeight * 0.15}
           stroke="#fff"
           strokeWidth="2"
           fill="none"
@@ -317,16 +312,16 @@ function FootballField({ homeTeam, awayTeam }) {
           x={fieldWidth * 0.35}
           y="0"
           width={fieldWidth * 0.3}
-          height={fieldHeight * 0.08}
+          height={fieldHeight * 0.06}
           stroke="#fff"
           strokeWidth="2"
           fill="none"
         />
         <Rect
           x={fieldWidth * 0.35}
-          y={fieldHeight * 0.92}
+          y={fieldHeight * 0.94}
           width={fieldWidth * 0.3}
-          height={fieldHeight * 0.08}
+          height={fieldHeight * 0.06}
           stroke="#fff"
           strokeWidth="2"
           fill="none"
@@ -388,14 +383,14 @@ function FootballField({ homeTeam, awayTeam }) {
       {/* Players */}
       {homeTeam.players.map(player => renderPlayer(player, true))}
       {awayTeam.players.map(player => renderPlayer(player, false))}
+    </TouchableOpacity>
     </View>
   );
 }
 
 export default function MatchDetailScreen() {
-  const { id } = useLocalSearchParams();
-  const match = MATCH_DATA;
-  const [activeTab, setActiveTab] = useState('eventos');
+    const match = MATCH_DATA;
+  const [activeTab, setActiveTab] = useState('alineaciones');
   // Hook para el sub-tab de alineaciones
   const [activeSubTab, setActiveSubTab] = useState('campo');
   // State para la vista de equipo en la lista de jugadores
@@ -406,7 +401,7 @@ export default function MatchDetailScreen() {
     { x: 'Tiros', home: match.stats.shots.home, away: match.stats.shots.away },
     { x: 'A Puerta', home: match.stats.shotsOnTarget.home, away: match.stats.shotsOnTarget.away },
     { x: 'Córners', home: match.stats.corners.home, away: match.stats.corners.away },
-    { x: 'Pases', home: match.stats.passes.home / 10, away: match.stats.passes.away / 10 },
+    { x: 'Pases', home: match.stats.passes.home, away: match.stats.passes.away },
   ];
 
   // Traducción para estadísticas detalladas
@@ -421,7 +416,7 @@ export default function MatchDetailScreen() {
     offsides: 'Fueras de Juego',
     saves: 'Paradas',
     passes: 'Pases',
-    passAccuracy: 'Precisión de Pases (%)'
+    passAccuracy: 'Precisión de Pases %'
   };
 
   // Para visualizar la formación táctica
@@ -472,7 +467,7 @@ export default function MatchDetailScreen() {
 
   // Render player list item component
   const PlayerListItem = ({ player, isStarter = false }) => (
-    <View style={styles.playerListItem}>
+    <TouchableOpacity style={styles.playerListItem}>
       <View style={styles.playerNumberBox}>
         <Text style={styles.playerNumberBoxText}>{player.number}</Text>
       </View>
@@ -486,19 +481,18 @@ export default function MatchDetailScreen() {
           <Text style={styles.starterBadgeText}>Titular</Text>
         </View>
       )}
-    </View>
+    </TouchableOpacity>
   );
   
-  // Render coach card component
   const CoachCard = ({ coach, teamName }) => (
-    <View style={styles.coachCard}>
+    <TouchableOpacity style={styles.coachCard}>
       <Image source={{ uri: coach.image }} style={styles.coachImage} />
       <View style={styles.coachInfo}>
         <Text style={styles.coachName}>{coach.name}</Text>
         <Text style={styles.coachTeam}>{teamName}</Text>
         <Text style={styles.coachDetails}>{coach.nationality}, {coach.age} años</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
   
   // Render staff member component
@@ -510,30 +504,13 @@ export default function MatchDetailScreen() {
     </View>
   );
   
+  
   // Render content based on active sub-tab
   const renderSubTabContent = () => {
     switch (activeSubTab) {
       case 'campo':
         return (
           <>
-            <View style={styles.formationsContainer}>
-              <View style={styles.formationTeam}>
-                <Image source={{ uri: match.homeTeam.logo }} style={styles.formationLogo} />
-                <Text style={styles.formationTeamName}>{match.homeTeam.name}</Text>
-                <View style={styles.formationBox}>
-                  <Text style={styles.formationText}>{match.homeTeam.formation}</Text>
-                </View>
-                {renderFormationVisualizer(match.homeTeam.formation, true)}
-              </View>
-              <View style={styles.formationTeam}>
-                <Image source={{ uri: match.awayTeam.logo }} style={styles.formationLogo} />
-                <Text style={styles.formationTeamName}>{match.awayTeam.name}</Text>
-                <View style={[styles.formationBox, { borderColor: '#ff4d4d' }]}>
-                  <Text style={styles.formationText}>{match.awayTeam.formation}</Text>
-                </View>
-                {renderFormationVisualizer(match.awayTeam.formation, false)}
-              </View>
-            </View>
             <FootballField homeTeam={match.homeTeam} awayTeam={match.awayTeam} />
           </>
         );
@@ -570,7 +547,7 @@ export default function MatchDetailScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
-            
+
             <View style={styles.playerListContainer}>
               <Text style={styles.playerListHeader}>Titulares</Text>
               {(teamView === 'home' ? match.homeTeam.players : match.awayTeam.players).map(player => (
@@ -582,31 +559,31 @@ export default function MatchDetailScreen() {
                 <PlayerListItem key={player.id} player={player} />
               ))}
             </View>
-          </>
-        );
+          </> 
+                 );
       case 'entrenadores':
         return (
           <View style={styles.coachesContainer}>
-            <Text style={styles.coachesHeader}>Entrenadores</Text>
-            <View style={styles.coachCardsContainer}>
-              <CoachCard coach={match.homeTeam.coach} teamName={match.homeTeam.name} />
-              <CoachCard coach={match.awayTeam.coach} teamName={match.awayTeam.name} />
-            </View>
-            
-            <Text style={styles.coachesHeader}>Staff Técnico - {match.homeTeam.name}</Text>
-            <View style={styles.staffContainer}>
-              {match.homeTeam.staffMembers.map((member, index) => (
-                <StaffMember key={index} member={member} />
-              ))}
-            </View>
-            
-            <Text style={styles.coachesHeader}>Staff Técnico - {match.awayTeam.name}</Text>
-            <View style={styles.staffContainer}>
-              {match.awayTeam.staffMembers.map((member, index) => (
-                <StaffMember key={index} member={member} />
-              ))}
-            </View>
+          <Text style={styles.coachesHeader}>Entrenadores</Text>
+          <View style={styles.coachCardsContainer}>
+            <CoachCard coach={match.homeTeam.coach} teamName={match.homeTeam.name} />
+            <CoachCard coach={match.awayTeam.coach} teamName={match.awayTeam.name} />
           </View>
+
+          <Text style={styles.coachesHeader}>Staff Técnico - {match.homeTeam.name}</Text>
+          <View style={styles.staffContainer}>
+            {match.homeTeam.staffMembers.map((member, index) => (
+              <StaffMember key={index} member={member} />
+            ))}
+          </View>
+
+          <Text style={styles.coachesHeader}>Staff Técnico - {match.awayTeam.name}</Text>
+          <View style={styles.staffContainer}>
+            {match.awayTeam.staffMembers.map((member, index) => (
+              <StaffMember key={index} member={member} />
+            ))}
+          </View>
+        </View>
         );
       default:
         return null;
@@ -675,7 +652,7 @@ export default function MatchDetailScreen() {
                     </Text>
                   </View>
                 </View>
-                
+  
                 {event.type === 'goal' && event.assist && (
                   <Text style={styles.eventDetail}>Asistencia: {event.assist}</Text>
                 )}
@@ -1041,6 +1018,7 @@ export default function MatchDetailScreen() {
         {renderContent()}
       </ScrollView>
     </View>
+
   );
 }
 
@@ -1467,20 +1445,19 @@ const styles = StyleSheet.create({
   },
   // Formación táctica visualización
   formationVisualizer: {
-    marginTop: 12,
+    marginVertical: 12,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   formationRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginVertical: 3,
+    marginVertical: 4,
   },
   formationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginHorizontal: 3,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginHorizontal: 4,
   },
   
   // Eventos mejorados
