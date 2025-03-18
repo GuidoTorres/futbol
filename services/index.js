@@ -26,4 +26,14 @@ export const getSofaScoreStructure = async () => {
   }
 };
 
+export const searchData = async (query) => {
+  try {
+    const response = await api.get(`/api/search/data?q=${query}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error searching data:', error);
+    throw error;
+  }
+};
+
 export default api;

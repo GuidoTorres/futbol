@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, ActivityIndicator, RefreshControl, SafeAreaView, Modal, Platform, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, ActivityIndicator, RefreshControl, SafeAreaView, Modal, Platform, TextInput, FlatList } from 'react-native';
 import { format, eachDayOfInterval, addDays, startOfToday, subMonths, addMonths, getYear, getMonth, getDate, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useRouter } from 'expo-router';
 import { useMatches } from '../../hooks/useMatches';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Search, X } from 'lucide-react-native';
+import { searchData } from '../../services';
 
 export default function MatchesScreen() {
   const router = useRouter();
@@ -18,6 +19,8 @@ export default function MatchesScreen() {
   const [showModalPicker, setShowModalPicker] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchActive, setIsSearchActive] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
   const { getMatchesForDate } = useMatches();
   
   // Obtener los próximos 14 días para el calendario
@@ -43,6 +46,27 @@ export default function MatchesScreen() {
     
     loadMatches();
   }, [selectedDate, getMatchesForDate]);
+  
+  // Función para buscar cuando cambia la consulta
+  useEffect(() => {
+    const searchTimeout = setTimeout(async () => {
+      if (searchQuery.trim().length > 2 && isSearchActive) {
+        try {
+          const data = await searchData(searchQuery);
+          setSearchResults(data.results || []);
+          setShowSearchResults(true);
+        } catch (error) {
+          console.error('Error buscando:', error);
+          setSearchResults([]);
+        }
+      } else {
+        setShowSearchResults(false);
+        setSearchResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(searchTimeout);
+  }, [searchQuery, isSearchActive]);
   
   // Función para refrescar los datos
   const onRefresh = async () => {
@@ -87,13 +111,43 @@ export default function MatchesScreen() {
     setIsSearchActive(!isSearchActive);
     if (isSearchActive) {
       setSearchQuery('');
+      setShowSearchResults(false);
     }
   };
   
   // Función para limpiar la búsqueda
   const clearSearch = () => {
     setSearchQuery('');
+    setShowSearchResults(false);
   };
+  
+  // Función para manejar la selección de un resultado de búsqueda
+  const handleSearchResultPress = (result) => {
+    if (result.type === 'player') {
+      router.push(`/player/${result.id}`);
+    } else if (result.type === 'team') {
+      router.push(`/team/${result.id}`);
+    } else if (result.type === 'league') {
+      router.push(`/league/${result.id}`);
+    }
+    setSearchQuery('');
+    setShowSearchResults(false);
+    setIsSearchActive(false);
+  };
+  
+  // Renderizar un elemento de resultado de búsqueda
+  const renderSearchItem = ({ item }) => (
+    <TouchableOpacity 
+      style={styles.searchResultItem} 
+      onPress={() => handleSearchResultPress(item)}
+    >
+      <Image 
+        source={{ uri: item.image }} 
+        style={styles.searchResultImage} 
+      />
+      <Text style={styles.searchResultText}>{item.title}</Text>
+    </TouchableOpacity>
+  );
   
   // Filtrar partidos basados en la búsqueda
   const filteredMatches = searchQuery.trim() === '' 
@@ -114,7 +168,7 @@ export default function MatchesScreen() {
               <View style={styles.searchInputContainer}>
                 <TextInput
                   style={styles.searchInput}
-                  placeholder="Buscar equipos, ligas..."
+                  placeholder="Buscar jugadores, equipos, ligas..."
                   placeholderTextColor="#888"
                   value={searchQuery}
                   onChangeText={setSearchQuery}
@@ -147,6 +201,18 @@ export default function MatchesScreen() {
             </>
           )}
         </View>
+        
+        {/* Resultados de búsqueda */}
+        {showSearchResults && searchResults.length > 0 && (
+          <View style={styles.searchResultsContainer}>
+            <FlatList
+              data={searchResults}
+              renderItem={renderSearchItem}
+              keyExtractor={(item) => item.id.toString()}
+              style={styles.searchResultsList}
+            />
+          </View>
+        )}
         
         <ScrollView
           refreshControl={
@@ -325,6 +391,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 3,
     height: 60,
+    zIndex: 10,
   },
   appLogo: {
     fontSize: 20,
@@ -376,6 +443,43 @@ const styles = StyleSheet.create({
   searchClearButton: {
     padding: 8,
     marginRight: 4,
+  },
+  searchResultsContainer: {
+    position: 'absolute',
+    top: 60,
+    left: 0,
+    right: 0,
+    backgroundColor: '#1a1a1a',
+    zIndex: 9,
+    maxHeight: 300,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 6,
+  },
+  searchResultsList: {
+    width: '100%',
+  },
+  searchResultItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  searchResultImage: {
+    width: 40,
+    height: 40,
+    marginRight: 16,
+    borderRadius: 20,
+  },
+  searchResultText: {
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: 'Inter_500Medium',
   },
   scrollContent: {
     paddingBottom: 20,
