@@ -56,7 +56,7 @@ export const getMatchesByDateRange = async (startDate, endDate) => {
       ? endDate.toISOString().split('T')[0] 
       : endDate;
     
-    const response = await api.get(`/api/sofascore/matches/range/${formattedStartDate}/${formattedEndDate}`);
+    const response = await api.get(`/api/matches/range/${formattedStartDate}/${formattedEndDate}`);
     return response.data;
   } catch (error) {
     console.error(`Error fetching matches for range ${startDate} to ${endDate}:`, error);
@@ -66,7 +66,7 @@ export const getMatchesByDateRange = async (startDate, endDate) => {
 
 export const getTodayMatches = async () => {
   try {
-    const response = await api.get('/api/sofascore/matches/today');
+    const response = await api.get('/api/matches/today');
     return response.data;
   } catch (error) {
     console.error('Error fetching today\'s matches:', error);
@@ -76,7 +76,7 @@ export const getTodayMatches = async () => {
 
 export const getWeekMatches = async () => {
   try {
-    const response = await api.get('/api/sofascore/matches/week');
+    const response = await api.get('/api/matches/week');
     return response.data;
   } catch (error) {
     console.error('Error fetching week matches:', error);
