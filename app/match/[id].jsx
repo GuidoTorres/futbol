@@ -1,85 +1,22 @@
-const MATCH_DATA = {
-  homeTeam: {
-    name: 'Real Madrid',
-    score: 1,
-    formation: '4-3-3',
-    coach: {
-      name: 'Hansi ',
-      image: 'https://images.unsplash.com/photo-1615572768141-290c2d38c0b5?w=64&h=64&fit=crop',
-      nationality: 'Italia',
-      age: 64
-    },
-    players: [
-      // Portero
-      { id: 1, name: 'Ter Stegen', number: 1, position: 'POR', x: 50, y: 10, image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=64&h=64&fit=crop' },
-      // Defensa - 4 defensas
-      { id: 2, name: 'Koundé', number: 23, position: 'LD', x: 20, y: 25, image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=64&h=64&fit=crop' },
-      { id: 3, name: 'Araújo', number: 4, position: 'DFC', x: 40, y: 25, image: 'https://images.unsplash.com/photo-1507038732509-8b1a9623223a?w=64&h=64&fit=crop' },
-      { id: 4, name: 'Christensen', number: 15, position: 'DFC', x: 60, y: 25, image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop' },
-      { id: 5, name: 'Baldé', number: 3, position: 'LI', x: 80, y: 25, image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop' },
-      // Mediocampo - 3 centrocampistas
-      { id: 6, name: 'Pedri', number: 8, position: 'MC', x: 30, y: 40, image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop' },
-      { id: 7, name: 'Busquets', number: 5, position: 'MCD', x: 50, y: 40, image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=64&h=64&fit=crop' },
-      { id: 8, name: 'De Jong', number: 21, position: 'MC', x: 70, y: 40, image: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=64&h=64&fit=crop' },
-      // Delanteros - 3 delanteros
-      { id: 9, name: 'Ferran', number: 11, position: 'EI', x: 30, y: 50, image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop' },
-      { id: 10, name: 'Lewandowski', number: 9, position: 'DC', x: 50, y: 50, image: 'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=64&h=64&fit=crop' },
-      { id: 11, name: 'Dembélé', number: 7, position: 'ED', x: 70, y: 50, image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop' },
-    ],
-    substitutes: [
-      { id: 12, name: 'Iñaki Peña', number: 13, position: 'POR', image: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=64&h=64&fit=crop' },
-      { id: 13, name: 'Eric García', number: 24, position: 'DFC', image: 'https://images.unsplash.com/photo-1618077360395-f3068be8e001?w=64&h=64&fit=crop' },
-      { id: 14, name: 'Jordi Alba', number: 18, position: 'LI', image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=64&h=64&fit=crop' },
-      { id: 15, name: 'Gavi', number: 6, position: 'MC', image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=64&h=64&fit=crop' },
-      { id: 16, name: 'Kessié', number: 19, position: 'MCD', image: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=64&h=64&fit=crop' },
-      { id: 17, name: 'Pablo Torre', number: 20, position: 'MC', image: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=64&h=64&fit=crop' },
-      { id: 18, name: 'Ansu Fati', number: 10, position: 'EI', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=64&h=64&fit=crop' },
-      { id: 19, name: 'Raphinha', number: 22, position: 'ED', image: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=64&h=64&fit=crop' },
-      { id: 20, name: 'Memphis', number: 14, position: 'DC', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop' }
-    ],
-    staffMembers: [
-      { name: 'Óscar Hernández', role: 'Asistente', image: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=64&h=64&fit=crop' },
-      { name: 'Sergio Alegre', role: 'Preparador Físico', image: 'https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=64&h=64&fit=crop' },
-      { name: 'José Ramón de la Fuente', role: 'Entrenador de Porteros', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64&h=64&fit=crop' }
-    ]
-  },
-  stats: {
-    possession: { home: 55, away: 45 },
-    shots: { home: 12, away: 8 },
-    shotsOnTarget: { home: 5, away: 3 },
-    corners: { home: 6, away: 4 },
-    fouls: { home: 10, away: 12 },
-    yellowCards: { home: 2, away: 1 },
-    redCards: { home: 0, away: 0 },
-    offsides: { home: 3, away: 2 },
-    saves: { home: 2, away: 3 },
-    passes: { home: 423, away: 389 },
-    passAccuracy: { home: 86, away: 83 },
-  },
-  events: [
-    { time: '23', type: 'goal', team: 'home', player: 'Vinicius Jr.', player: 'Modric', description: 'Disparo desde fuera del área' },
-    { time: '31', type: 'substitution', team: 'away', playerOut: 'Christensen', playerIn: 'Eric García', reason: 'Lesión' },
-    { time: '45+2', type: 'yellow', team: 'away', player: 'Araújo', description: 'Falta táctica sobre Vinicius' },
-    { time: '52', type: 'yellow', team: 'home', player: 'Casemiro', description: 'Falta sobre Pedri' },
-    { time: '67', type: 'goal', team: 'away', player: 'Lewandowski', assist: 'De Jong', description: 'Remate de cabeza tras centro' },
-    { time: '72', type: 'substitution', team: 'home', playerOut: 'Kroos', playerIn: 'Camavinga', reason: 'Táctica' },
-    { time: '75', type: 'substitution', team: 'away', playerOut: 'Pedri', playerIn: 'Gavi', reason: 'Táctica' },
-    { time: '81', type: 'substitution', team: 'home', playerOut: 'Rodrygo', playerIn: 'Asensio', reason: 'Táctica' },
-    { time: '84', type: 'yellow', team: 'away', player: 'Busquets', description: 'Protestar' },
-    { time: '89', type: 'goal', team: 'home', player: 'Bellingham', assist: 'Vinicius Jr.', description: 'Contraataque' },
-    { time: '90+3', type: 'yellow', team: 'home', player: 'Mendy', description: 'Pérdida de tiempo' }
-  ]
-};
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions, SafeAreaView, ActivityIndicator } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { VictoryPie, VictoryChart, VictoryLine, VictoryAxis, VictoryLegend, VictoryBar, VictoryGroup } from 'victory-native';
+import { Svg, Rect, Line, Circle, Path } from 'react-native-svg';
+import { useMatches, EXAMPLE_MATCH } from '../../hooks/useMatches';
+
+// Usamos EXAMPLE_MATCH de useMatches.js en lugar de duplicar los datos aquí
+const MATCH_DATA = EXAMPLE_MATCH;
 
 const { width: screenWidth } = Dimensions.get('window');
 
 // Componente para el campo de fútbol con las alineaciones
 function FootballField({ homeTeam, awayTeam }) {
   const fieldWidth = screenWidth - 32;
-  const fieldHeight = fieldWidth * 1.5; // Reduced from 1.8 for better proportions
-  const playerSize = 25; // Reduced from 30 for better scaling
+  const fieldHeight = fieldWidth * 1.5; // Proporción mejorada del campo
+  const playerSize = 28; // Tamaño ligeramente aumentado para mejor visibilidad
   
-  // Función para crear líneas de formación
+  // Función para crear líneas de formación - ahora continuas en lugar de punteadas
   const renderFormationLines = (players, isHome) => {
     // Agrupar jugadores por posición general (defensa, mediocampo, delantero)
     const defenders = players.filter(p => p.position.includes('D') || p.position.includes('LI') || p.position.includes('LD'));
@@ -87,7 +24,7 @@ function FootballField({ homeTeam, awayTeam }) {
     const forwards = players.filter(p => p.position.includes('E') || p.position === 'DC');
     const goalkeeper = players.find(p => p.position === 'POR');
     
-    // Crear líneas para visualizar la formación
+    // Crear líneas para visualizar la formación - ahora continuas y más visibles
     return (
       <>
         {/* Línea de portero */}
@@ -97,9 +34,8 @@ function FootballField({ homeTeam, awayTeam }) {
             y1={isHome ? fieldHeight * 0.90 : fieldHeight * 0.10}
             x2={fieldWidth * 0.95}
             y2={isHome ? fieldHeight * 0.90 : fieldHeight * 0.10}
-            stroke={isHome ? "#00ff8755" : "#ff4d4d55"}
-            strokeWidth="1"
-            strokeDasharray="5,3"
+            stroke={isHome ? "#00ff87aa" : "#ff4d4daa"}
+            strokeWidth="1.5"
           />
         )}
         
@@ -110,9 +46,8 @@ function FootballField({ homeTeam, awayTeam }) {
             y1={isHome ? fieldHeight * 0.75 : fieldHeight * 0.25}
             x2={fieldWidth * 0.95}
             y2={isHome ? fieldHeight * 0.75 : fieldHeight * 0.25}
-            stroke={isHome ? "#00ff8755" : "#ff4d4d55"}
-            strokeWidth="1"
-            strokeDasharray="5,3"
+            stroke={isHome ? "#00ff87aa" : "#ff4d4daa"}
+            strokeWidth="1.5"
           />
         )}
         
@@ -123,71 +58,113 @@ function FootballField({ homeTeam, awayTeam }) {
             y1={isHome ? fieldHeight * 0.60 : fieldHeight * 0.40}
             x2={fieldWidth * 0.95}
             y2={isHome ? fieldHeight * 0.60 : fieldHeight * 0.40}
-            stroke={isHome ? "#00ff8755" : "#ff4d4d55"}
-            strokeWidth="1"
-            strokeDasharray="5,3"
+            stroke={isHome ? "#00ff87aa" : "#ff4d4daa"}
+            strokeWidth="1.5"
           />
         )}
         
-        {/* Línea de delantera - la misma para ambos equipos en el centro */}
+        {/* Línea de delantera */}
         {forwards.length > 0 && (
           <Line
             x1={fieldWidth * 0.05}
-            y1={isHome ? fieldHeight * 0.50 : fieldHeight * 0.50}
+            y1={isHome ? fieldHeight * 0.45 : fieldHeight * 0.55}
             x2={fieldWidth * 0.95}
-            y2={isHome ? fieldHeight * 0.50 : fieldHeight * 0.50}
-            stroke={isHome ? "#00ff8755" : "#ff4d4d55"}
-            strokeWidth="1"
-            strokeDasharray="5,3"
+            y2={isHome ? fieldHeight * 0.45 : fieldHeight * 0.55}
+            stroke={isHome ? "#00ff87aa" : "#ff4d4daa"}
+            strokeWidth="1.5"
           />
         )}
       </>
     );
   };
 
-  // Función para calcular posiciones de jugadores según su rol
-  const calculatePlayerPositions = (players, isHome) => {
-    // Agrupar jugadores por posición
-    const goalkeeper = players.find(p => p.position === 'POR');
-    const defenders = players.filter(p => p.position.includes('D') || p.position.includes('LI') || p.position.includes('LD'));
-    const midfielders = players.filter(p => p.position.includes('M'));
-    const forwards = players.filter(p => p.position.includes('E') || p.position === 'DC');
+  // Función mejorada para calcular posiciones de jugadores para evitar superposiciones
+  const calculatePositions = () => {
+    // Crear copias para no modificar los originales
+    const homePlayers = JSON.parse(JSON.stringify(homeTeam.players || []));
+    const awayPlayers = JSON.parse(JSON.stringify(awayTeam.players || []));
     
-    // Actualizar posición del portero
-    if (goalkeeper) {
-      goalkeeper.x = 50; // Centrado horizontalmente
-      goalkeeper.y = isHome ? 90 : 10; // Posición vertical según equipo
+    // Posicionar porteros
+    const homeGK = homePlayers.find(p => p.position === 'POR');
+    if (homeGK) {
+      homeGK.x = 50;
+      homeGK.y = 88;  // Ligeramente ajustado para mejor alineación
     }
     
-    // Distribuir defensas uniformemente
-    defenders.forEach((player, index) => {
-      const totalPlayers = defenders.length;
-      // Calcular posición horizontal (distribuidos uniformemente entre 20% y 80%)
-      player.x = 20 + (60 / (totalPlayers + 1)) * (index + 1);
-      // Posición vertical según equipo
-      player.y = isHome ? 75 : 25;
-    });
+    const awayGK = awayPlayers.find(p => p.position === 'POR');
+    if (awayGK) {
+      awayGK.x = 50;
+      awayGK.y = 12;  // Ligeramente ajustado para mejor alineación
+    }
     
-    // Distribuir centrocampistas uniformemente
-    midfielders.forEach((player, index) => {
-      const totalPlayers = midfielders.length;
-      // Calcular posición horizontal (distribuidos uniformemente entre 20% y 80%)
-      player.x = 20 + (60 / (totalPlayers + 1)) * (index + 1);
-      // Posición vertical según equipo
-      player.y = isHome ? 60 : 40;
-    });
+    // Función mejorada para posicionar jugadores - asegura centrado correcto
+    const positionPlayers = (players, yPosition, isHome) => {
+      if (!players.length) return;
+      
+      // Si hay un solo jugador, centrarlo
+      if (players.length === 1) {
+        players[0].x = 50;
+        players[0].y = yPosition;
+        return;
+      }
+      
+      // Para múltiples jugadores, centrarlos mejor
+      const centeredPositions = [];
+      const totalWidth = 70; // Ancho total disponible (%)
+      const margin = (100 - totalWidth) / 2; // Margen para centrar (15% a cada lado)
+      const increment = totalWidth / (players.length - 1); // Espacio entre jugadores
+      
+      // Para formaciones con pocos o muchos jugadores, ajustar
+      for (let i = 0; i < players.length; i++) {
+        let x;
+        
+        if (players.length === 1) {
+          x = 50; // Un solo jugador siempre al centro
+        } else if (players.length === 2) {
+          x = (i === 0) ? 40 : 60; // Dos jugadores, uno a cada lado del centro
+        } else if (players.length === 3) {
+          x = margin + (increment * i); // Tres jugadores, distribuidos uniformemente
+        } else if (players.length === 4) {
+          // Cuatro jugadores con distribución especial para mayor simetría
+          const positions = [25, 42, 58, 75];
+          x = positions[i];
+        } else if (players.length === 5) {
+          // Cinco jugadores con distribución especial para mayor simetría
+          const positions = [20, 35, 50, 65, 80];
+          x = positions[i];
+        } else {
+          // Distribución genérica para otros casos
+          x = margin + (increment * i);
+        }
+        
+        players[i].x = x;
+        players[i].y = yPosition;
+      }
+    };
     
-    // Distribuir delanteros uniformemente
-    forwards.forEach((player, index) => {
-      const totalPlayers = forwards.length;
-      // Calcular posición horizontal (distribuidos uniformemente entre 20% y 80%)
-      player.x = 20 + (60 / (totalPlayers + 1)) * (index + 1);
-      // Posición vertical - ambos equipos en el centro
-      player.y = 50;
-    });
+    // Home team positions - con posiciones ajustadas
+    const homeDefenders = homePlayers.filter(p => p.position.includes('D') || p.position.includes('LI') || p.position.includes('LD'));
+    const homeMidfielders = homePlayers.filter(p => p.position.includes('M'));
+    const homeForwards = homePlayers.filter(p => p.position.includes('E') || p.position === 'DC');
     
-    return players;
+    positionPlayers(homeDefenders, 75, true);
+    positionPlayers(homeMidfielders, 60, true);
+    positionPlayers(homeForwards, 45, true);
+    
+    // Away team positions - con posiciones ajustadas
+    const awayDefenders = awayPlayers.filter(p => p.position.includes('D') || p.position.includes('LI') || p.position.includes('LD'));
+    const awayMidfielders = awayPlayers.filter(p => p.position.includes('M'));
+    const awayForwards = awayPlayers.filter(p => p.position.includes('E') || p.position === 'DC');
+    
+    positionPlayers(awayDefenders, 25, false);
+    positionPlayers(awayMidfielders, 40, false);
+    positionPlayers(awayForwards, 55, false);
+    
+    return { homePlayers, awayPlayers };
   };
+
+  // Calcular posiciones de jugadores
+  const { homePlayers, awayPlayers } = calculatePositions();
 
   const renderPlayer = (player, isHome) => (
     <View
@@ -206,200 +183,277 @@ function FootballField({ homeTeam, awayTeam }) {
       <View style={[
         styles.playerCircle,
         { 
-          width: playerSize, 
-          height: playerSize, 
+          width: playerSize - 6,  // Reducido el tamaño de los círculos
+          height: playerSize - 6, // Reducido el tamaño de los círculos
           borderColor: isHome ? '#00ff87' : '#ff4d4d',
-          backgroundColor: isHome ? '#00ff8722' : '#ff4d4d22' 
+          backgroundColor: isHome ? '#00ff8744' : '#ff4d4d44',
+          borderWidth: 1.5
         }
       ]}>
-        <Text style={styles.playerNumberText}>{player.number}</Text>
+        <Text style={[styles.playerNumberText, { fontSize: 11 }]}>{player.number}</Text>
       </View>
       <Text style={[
         styles.playerName,
         {
-          backgroundColor: isHome ? '#00ff8766' : '#ff4d4d66',
+          backgroundColor: isHome ? '#00ff8788' : '#ff4d4d88',
+          paddingHorizontal: 3,
+          paddingVertical: 1,
+          borderRadius: 3,
+          marginTop: 3,
+          overflow: 'hidden',
+          fontSize: 10
         }
       ]}>
         {player.name}
       </Text>
-      <Text style={styles.playerPosition}>{player.position}</Text>
     </View>
   );
 
   return (
     <View style={[styles.field, { width: fieldWidth, height: fieldHeight }]}>
-      <TouchableOpacity>
       <Svg width={fieldWidth} height={fieldHeight}>
-        {/* Field outline */}
+        {/* Fondo del campo mejorado con textura de césped */}
         <Rect
           x="0"
           y="0"
           width={fieldWidth}
           height={fieldHeight}
-          fill="#1a4728"
+          fill="#1c5c2e"
           stroke="#fff"
           strokeWidth="2"
         />
         
-        {/* Field stripes pattern */}
-        {[...Array(15)].map((_, i) => (
+        {/* Patrón de césped mejorado */}
+        {[...Array(20)].map((_, i) => (
           <Rect
             key={`stripe-${i}`}
             x="0"
-            y={i * (fieldHeight / 15)}
+            y={i * (fieldHeight / 20)}
             width={fieldWidth}
-            height={fieldHeight / 30}
-            fill="#19421f"
-            opacity={0.7}
+            height={fieldHeight / 40}
+            fill="#164a24"
+            opacity={0.8}
           />
         ))}
         
-        {/* Center line */}
+        {/* Línea central */}
         <Line
           x1="0"
           y1={fieldHeight / 2}
           x2={fieldWidth}
           y2={fieldHeight / 2}
           stroke="#fff"
-          strokeWidth="2"
+          strokeWidth="1.5"
         />
         
-        {/* Center circle */}
+        {/* Círculo central */}
         <Circle
           cx={fieldWidth / 2}
           cy={fieldHeight / 2}
-          r={fieldWidth / 5}
+          r={fieldWidth / 8}
           stroke="#fff"
-          strokeWidth="2"
+          strokeWidth="1.5"
           fill="none"
         />
         
-        {/* Center spot */}
+        {/* Punto central */}
         <Circle
           cx={fieldWidth / 2}
           cy={fieldHeight / 2}
-          r={4}
-          fill="#fff"
-        />
-        
-        {/* Penalty areas */}
-        <Rect
-          x={fieldWidth * 0.25}
-          y="0"
-          width={fieldWidth * 0.5}
-          height={fieldHeight * 0.15}
-          stroke="#fff"
-          strokeWidth="2"
-          fill="none"
-        />
-        <Rect
-          x={fieldWidth * 0.25}
-          y={fieldHeight * 0.85}
-          width={fieldWidth * 0.5}
-          height={fieldHeight * 0.15}
-          stroke="#fff"
-          strokeWidth="2"
-          fill="none"
-        />
-        
-        {/* Goal boxes */}
-        <Rect
-          x={fieldWidth * 0.35}
-          y="0"
-          width={fieldWidth * 0.3}
-          height={fieldHeight * 0.06}
-          stroke="#fff"
-          strokeWidth="2"
-          fill="none"
-        />
-        <Rect
-          x={fieldWidth * 0.35}
-          y={fieldHeight * 0.94}
-          width={fieldWidth * 0.3}
-          height={fieldHeight * 0.06}
-          stroke="#fff"
-          strokeWidth="2"
-          fill="none"
-        />
-        
-        {/* Penalty spots */}
-        <Circle
-          cx={fieldWidth / 2}
-          cy={fieldHeight * 0.15}
-          r={3}
-          fill="#fff"
-        />
-        <Circle
-          cx={fieldWidth / 2}
-          cy={fieldHeight * 0.85}
           r={3}
           fill="#fff"
         />
         
-        {/* Corner arcs */}
-        <Circle
-          cx={0}
-          cy={0}
-          r={10}
+        {/* Áreas de penalti más pequeñas y proporcionales */}
+        <Rect
+          x={fieldWidth * 0.32}
+          y="0"
+          width={fieldWidth * 0.36}
+          height={fieldHeight * 0.12}
           stroke="#fff"
-          strokeWidth="2"
+          strokeWidth="1.5"
           fill="none"
         />
-        <Circle
-          cx={fieldWidth}
-          cy={0}
-          r={10}
+        <Rect
+          x={fieldWidth * 0.32}
+          y={fieldHeight * 0.88}
+          width={fieldWidth * 0.36}
+          height={fieldHeight * 0.12}
           stroke="#fff"
-          strokeWidth="2"
-          fill="none"
-        />
-        <Circle
-          cx={0}
-          cy={fieldHeight}
-          r={10}
-          stroke="#fff"
-          strokeWidth="2"
-          fill="none"
-        />
-        <Circle
-          cx={fieldWidth}
-          cy={fieldHeight}
-          r={10}
-          stroke="#fff"
-          strokeWidth="2"
+          strokeWidth="1.5"
           fill="none"
         />
         
-        {/* Formation lines */}
+        {/* Áreas pequeñas */}
+        <Rect
+          x={fieldWidth * 0.40}
+          y="0"
+          width={fieldWidth * 0.20}
+          height={fieldHeight * 0.05}
+          stroke="#fff"
+          strokeWidth="1.5"
+          fill="none"
+        />
+        <Rect
+          x={fieldWidth * 0.40}
+          y={fieldHeight * 0.95}
+          width={fieldWidth * 0.20}
+          height={fieldHeight * 0.05}
+          stroke="#fff"
+          strokeWidth="1.5"
+          fill="none"
+        />
+        
+        {/* Puntos de penalti */}
+        <Circle
+          cx={fieldWidth / 2}
+          cy={fieldHeight * 0.12}
+          r={2.5}
+          fill="#fff"
+        />
+        <Circle
+          cx={fieldWidth / 2}
+          cy={fieldHeight * 0.88}
+          r={2.5}
+          fill="#fff"
+        />
+        
+        {/* Semicírculos del área - reemplazados por arcos correctos */}
+        <Path
+          d={`M ${fieldWidth * 0.38} ${fieldHeight * 0.12} A ${fieldWidth * 0.12} ${fieldWidth * 0.12} 0 0 1 ${fieldWidth * 0.62} ${fieldHeight * 0.12}`}
+          stroke="#fff"
+          strokeWidth="1.5"
+          fill="none"
+        />
+        <Path
+          d={`M ${fieldWidth * 0.38} ${fieldHeight * 0.88} A ${fieldWidth * 0.12} ${fieldWidth * 0.12} 0 0 0 ${fieldWidth * 0.62} ${fieldHeight * 0.88}`}
+          stroke="#fff"
+          strokeWidth="1.5"
+          fill="none"
+        />
+        
+        {/* Corners con arcos en lugar de círculos completos */}
+        <Path
+          d={`M 0 ${5} A 5 5 0 0 1 ${5} 0`}
+          stroke="#fff"
+          strokeWidth="1.5"
+          fill="none"
+        />
+        <Path
+          d={`M ${fieldWidth} ${5} A 5 5 0 0 0 ${fieldWidth - 5} 0`}
+          stroke="#fff"
+          strokeWidth="1.5"
+          fill="none"
+        />
+        <Path
+          d={`M 0 ${fieldHeight - 5} A 5 5 0 0 0 ${5} ${fieldHeight}`}
+          stroke="#fff"
+          strokeWidth="1.5"
+          fill="none"
+        />
+        <Path
+          d={`M ${fieldWidth} ${fieldHeight - 5} A 5 5 0 0 1 ${fieldWidth - 5} ${fieldHeight}`}
+          stroke="#fff"
+          strokeWidth="1.5"
+          fill="none"
+        />
+        
+        {/* Líneas de formación mejoradas */}
         {renderFormationLines(homeTeam.players, true)}
         {renderFormationLines(awayTeam.players, false)}
       </Svg>
       
-      {/* Players */}
-      {homeTeam.players.map(player => renderPlayer(player, true))}
-      {awayTeam.players.map(player => renderPlayer(player, false))}
-    </TouchableOpacity>
+      {/* Jugadores con posiciones calculadas para evitar superposiciones */}
+      {homePlayers.map(player => renderPlayer(player, true))}
+      {awayPlayers.map(player => renderPlayer(player, false))}
     </View>
   );
 }
 
-export default function MatchDetailScreen() {
-    const match = MATCH_DATA;
-  const [activeTab, setActiveTab] = useState('alineaciones');
-  // Hook para el sub-tab de alineaciones
-  const [activeSubTab, setActiveSubTab] = useState('campo');
-  // State para la vista de equipo en la lista de jugadores
-  const [teamView, setTeamView] = useState('home');
+const MatchDetailScreen = () => {
+    const params = useLocalSearchParams();
+    const { id } = params;
+    const [match, setMatch] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const { getMatchById } = useMatches();
+    const [activeTab, setActiveTab] = useState('alineaciones');
+    // Hook para el sub-tab de alineaciones
+    const [activeSubTab, setActiveSubTab] = useState('campo');
+    // State para la vista de equipo en la lista de jugadores
+    const [teamView, setTeamView] = useState('home');
+    // Hook para el submenu de estadísticas (debe estar aquí para evitar errores de hooks)
+    const [statsSubTab, setStatsSubTab] = useState('resumen');
+    
+    // Efecto para cargar los datos del partido específico
+    useEffect(() => {
+      const fetchMatchData = async () => {
+        setIsLoading(true);
+        try {
+          // Ahora getMatchById ya devuelve datos completos con EXAMPLE_MATCH como respaldo
+          const matchData = await getMatchById(id);
+          console.log('Datos completos del partido:', matchData);
+          setMatch(matchData);
+        } catch (error) {
+          console.error('Error al cargar los datos del partido:', error);
+          // En caso de error, usar los datos de ejemplo
+          setMatch(EXAMPLE_MATCH);
+        } finally {
+          setIsLoading(false);
+        }
+      };
 
+      fetchMatchData();
+    }, [id, getMatchById]);
+    
+    // Verificar si se están cargando los datos
+    if (isLoading) {
+      return (
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#121212'}}>
+          <ActivityIndicator size="large" color="#00ff87" />
+          <Text style={{color: 'white', fontSize: 16, marginTop: 12}}>Cargando datos del partido...</Text>
+        </View>
+      );
+    }
+    
+    // Verificar si match tiene datos de homeTeam y awayTeam antes de renderizar
+    if (!match || !match.homeTeam || !match.awayTeam) {
+      return (
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#121212'}}>
+          <Text style={{color: 'white', fontSize: 16}}>No se pudieron cargar los datos del partido</Text>
+        </View>
+      );
+    }
+
+  // Aseguramos que existan las propiedades antes de usarlas
   const statsData = [
-    { x: 'Posesión', home: match.stats.possession.home, away: match.stats.possession.away },
-    { x: 'Tiros', home: match.stats.shots.home, away: match.stats.shots.away },
-    { x: 'A Puerta', home: match.stats.shotsOnTarget.home, away: match.stats.shotsOnTarget.away },
-    { x: 'Córners', home: match.stats.corners.home, away: match.stats.corners.away },
-    { x: 'Pases', home: match.stats.passes.home, away: match.stats.passes.away },
+    { 
+      x: 'Posesión', 
+      home: match.stats?.possession?.home || 0, 
+      away: match.stats?.possession?.away || 0 
+    },
+    { 
+      x: 'Tiros', 
+      home: match.stats?.shots?.home || 0, 
+      away: match.stats?.shots?.away || 0 
+    },
+    { 
+      x: 'A Puerta', 
+      home: match.stats?.shotsOnTarget?.home || 0, 
+      away: match.stats?.shotsOnTarget?.away || 0 
+    },
+    { 
+      x: 'Córners', 
+      home: match.stats?.corners?.home || 0, 
+      away: match.stats?.corners?.away || 0 
+    },
+    { 
+      x: 'Pases', 
+      home: match.stats?.passes?.home || 0, 
+      away: match.stats?.passes?.away || 0 
+    },
   ];
-
-  // Traducción para estadísticas detalladas
+  
+  // Traducción para estadísticas detalladas - movido aquí arriba para que esté disponible en todas las secciones
   const statTranslations = {
     possession: 'Posesión',
     shots: 'Tiros',
@@ -696,49 +750,171 @@ export default function MatchDetailScreen() {
           </View>
         );
       case 'estadisticas':
+        // Ya estamos usando el state definido al inicio del componente
+        
+        // Categorías de estadísticas para la pestañas 'avanzado'
+        const statCategories = [
+          {
+            title: "Ataque",
+            icon: "⚔️",
+            stats: [
+              { key: "possession", icon: "⚽" },
+              { key: "shots", icon: "🎯" },
+              { key: "shotsOnTarget", icon: "🥅" },
+              { key: "corners", icon: "🚩" },
+              { key: "offsides", icon: "🚫" },
+            ]
+          },
+          {
+            title: "Pases",
+            icon: "🦶",
+            stats: [
+              { key: "passes", icon: "🔄" },
+              { key: "passAccuracy", icon: "📊" },
+            ]
+          },
+          {
+            title: "Disciplina",
+            icon: "🧠",
+            stats: [
+              { key: "fouls", icon: "👊" },
+              { key: "yellowCards", icon: "🟨" },
+              { key: "redCards", icon: "🟥" },
+            ]
+          },
+          {
+            title: "Portería",
+            icon: "🧤",
+            stats: [
+              { key: "saves", icon: "🛡️" },
+            ]
+          }
+        ];
+        
+        // Función para renderizar una categoría de estadísticas
+        const renderStatCategory = (category) => {
+          return (
+            <View key={category.title} style={styles.statCategoryContainer}>
+              <View style={styles.statCategoryHeader}>
+                <Text style={styles.statCategoryIcon}>{category.icon}</Text>
+                <Text style={styles.statCategoryTitle}>{category.title}</Text>
+              </View>
+              <View style={styles.detailedStats}>
+                {category.stats.map(stat => {
+                  // Verificación adicional para evitar error si stats[stat.key] es undefined
+                  const value = match.stats && match.stats[stat.key];
+                  if (!value) return null;
+                  
+                  // Verificar si el valor existe
+                  if (!value || typeof value !== 'object' || !('home' in value) || !('away' in value)) {
+                    return null;
+                  }
+                  
+                  // Calcular la diferencia para destacar mejor equipo
+                  const diff = value.home - value.away;
+                  const homeBetter = diff > 0;
+                  const awayBetter = diff < 0;
+                  
+                  // Para stats donde número menor es mejor (faltas, tarjetas)
+                  const reversedStat = ['fouls', 'yellowCards', 'redCards', 'offsides'].includes(stat.key);
+                  
+                  return (
+                    <View key={stat.key} style={styles.statRow}>
+                      <Text style={[
+                        styles.statValue,
+                        (!reversedStat && homeBetter) || (reversedStat && !homeBetter) ? styles.statValueHighlighted : null
+                      ]}>
+                        {value.home}
+                      </Text>
+                      <View style={styles.statLabel}>
+                        <Text style={styles.statIcon}>{stat.icon}</Text>
+                        <Text style={styles.statLabelText}>
+                          {statTranslations[stat.key] || stat.key}
+                        </Text>
+                      </View>
+                      <Text style={[
+                        styles.statValue, 
+                        (!reversedStat && awayBetter) || (reversedStat && !awayBetter) ? styles.statValueHighlighted : null
+                      ]}>
+                        {value.away}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          );
+        };
+        
         // Crea un nuevo conjunto de datos más completo
         const keyStats = [
           { 
             title: 'Posesión', 
-            home: match.stats.possession.home, 
-            away: match.stats.possession.away,
+            home: match.stats?.possession?.home || 0, 
+            away: match.stats?.possession?.away || 0,
             unit: '%',
             icon: '⚽' 
           },
           { 
             title: 'Tiros', 
-            home: match.stats.shots.home, 
-            away: match.stats.shots.away,
-            unit: 'tiros',
+            home: match.stats?.shots?.home || 0, 
+            away: match.stats?.shots?.away || 0,
+            unit: '',
             icon: '🎯' 
           },
           { 
             title: 'Tiros a Puerta', 
-            home: match.stats.shotsOnTarget.home, 
-            away: match.stats.shotsOnTarget.away,
-            unit: 'tiros',
+            home: match.stats?.shotsOnTarget?.home || 0, 
+            away: match.stats?.shotsOnTarget?.away || 0,
+            unit: '',
             icon: '🥅' 
           },
           { 
             title: 'Precisión de Pases', 
-            home: match.stats.passAccuracy.home, 
-            away: match.stats.passAccuracy.away,
+            home: match.stats?.passAccuracy?.home || 0, 
+            away: match.stats?.passAccuracy?.away || 0,
             unit: '%',
             icon: '🦶' 
+          },
+          {
+            title: 'Córners',
+            home: match.stats?.corners?.home || 0,
+            away: match.stats?.corners?.away || 0,
+            unit: '',
+            icon: '🚩'
+          },
+          {
+            title: 'Faltas',
+            home: match.stats?.fouls?.home || 0,
+            away: match.stats?.fouls?.away || 0,
+            unit: '',
+            icon: '👊'
           }
         ];
         
-        // Función para renderizar barras de progreso
+        // Función para renderizar barras de progreso mejoradas
         const renderProgressBar = (stat) => {
           const total = stat.home + stat.away;
-          const homePercent = total === 0 ? 50 : (stat.home / total) * 100;
+          // Asegurar que siempre tengamos al menos un 10% de barra para cada equipo
+          const homePercent = total === 0 ? 50 : Math.max(10, Math.min(90, (stat.home / total) * 100));
+          const awayPercent = 100 - homePercent;
           
           return (
             <View style={styles.progressBarContainer} key={stat.title}>
               <View style={styles.progressBarLabels}>
-                <Text style={styles.progressBarValue}>{stat.home}{stat.unit}</Text>
+                <View style={styles.teamStatValue}>
+                  <Text style={[styles.progressBarValue, {color: '#00ff87', textAlign: 'center'}]}>
+                    {stat.home}{stat.unit}
+                  </Text>
+                  <View style={{width: 8, height: 8, borderRadius: 4, backgroundColor: '#00ff87', marginLeft: 4}} />
+                </View>
                 <Text style={styles.progressBarTitle}>{stat.icon} {stat.title}</Text>
-                <Text style={styles.progressBarValue}>{stat.away}{stat.unit}</Text>
+                <View style={styles.teamStatValue}>
+                  <View style={{width: 8, height: 8, borderRadius: 4, backgroundColor: '#ff4d4d', marginRight: 4}} />
+                  <Text style={[styles.progressBarValue, {color: '#ff4d4d', textAlign: 'center'}]}>
+                    {stat.away}{stat.unit}
+                  </Text>
+                </View>
               </View>
               <View style={styles.progressBar}>
                 <View 
@@ -750,7 +926,7 @@ export default function MatchDetailScreen() {
                 <View 
                   style={[
                     styles.progressBarAway,
-                    { width: `${100 - homePercent}%` }
+                    { width: `${awayPercent}%` }
                   ]} 
                 />
               </View>
@@ -758,67 +934,158 @@ export default function MatchDetailScreen() {
           );
         };
         
+        // SubTabs para estadísticas
+        const StatsSubTab = ({ title, active, onPress }) => (
+          <TouchableOpacity
+            style={[styles.statsSubTabButton, active && styles.activeStatsSubTabButton]}
+            onPress={onPress}
+          >
+            <Text style={[styles.statsSubTabText, active && styles.activeStatsSubTabText]}>
+              {title}
+            </Text>
+          </TouchableOpacity>
+        );
+        
+        // Renderizar el contenido según el subtab activo
+        const renderStatsContent = () => {
+          switch (statsSubTab) {
+            case 'resumen':
+              return (
+                <>
+                  {/* Estadísticas clave con barras de progreso */}
+                  <View style={styles.statsSection}>
+                    <View style={styles.statsHeader}>
+                      <View style={styles.teamHeaderItem}>
+                        <Image source={{ uri: match.homeTeam.logo }} style={styles.statsTeamLogo} />
+                        <Text style={styles.statsTeamName}>{match.homeTeam.name}</Text>
+                      </View>
+                      <View style={{width: 40}} />
+                      <View style={styles.teamHeaderItem}>
+                        <Image source={{ uri: match.awayTeam.logo }} style={styles.statsTeamLogo} />
+                        <Text style={styles.statsTeamName}>{match.awayTeam.name}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.statsContainer}>
+                      {keyStats.map(renderProgressBar)}
+                    </View>
+                  </View>
+                </>
+              );
+              
+            case 'grafico':
+              return (
+                <>
+                  {/* Gráfico de barras mejorado */}
+                  <View style={styles.statsSection}>
+                    <View style={styles.statsHeader}>
+                      <View style={styles.teamHeaderItem}>
+                        <Image source={{ uri: match.homeTeam.logo }} style={styles.statsTeamLogo} />
+                        <Text style={styles.statsTeamName}>{match.homeTeam.name}</Text>
+                      </View>
+                      <View style={{width: 40}} />
+                      <View style={styles.teamHeaderItem}>
+                        <Image source={{ uri: match.awayTeam.logo }} style={styles.statsTeamLogo} />
+                        <Text style={styles.statsTeamName}>{match.awayTeam.name}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.statsContainer}>
+                      <VictoryChart
+                        height={350}
+                        padding={{ top: 40, bottom: 80, left: 40, right: 40 }}
+                        domainPadding={{ x: 30 }}>
+                        <VictoryLegend
+                          x={125}
+                          y={0}
+                          orientation="horizontal"
+                          gutter={20}
+                          data={[
+                            { name: match.homeTeam.name, symbol: { fill: '#00ff87' } },
+                            { name: match.awayTeam.name, symbol: { fill: '#ff4d4d' } },
+                          ]}
+                          style={{
+                            labels: { fill: '#fff', fontSize: 12 }
+                          }}
+                        />
+                        <VictoryGroup offset={20}>
+                          <VictoryBar
+                            data={statsData}
+                            y="home"
+                            style={{ data: { fill: '#00ff87' } }}
+                            cornerRadius={{ top: 3 }}
+                            barWidth={20}
+                          />
+                          <VictoryBar
+                            data={statsData}
+                            y="away"
+                            style={{ data: { fill: '#ff4d4d' } }}
+                            cornerRadius={{ top: 3 }}
+                            barWidth={20}
+                          />
+                        </VictoryGroup>
+                        <VictoryAxis
+                          style={{
+                            axis: { stroke: '#444' },
+                            tickLabels: { fill: '#999', fontSize: 12, angle: -45, padding: 5 }
+                          }}
+                        />
+                        <VictoryAxis
+                          dependentAxis
+                          style={{
+                            axis: { stroke: '#444' },
+                            tickLabels: { fill: '#999', fontSize: 12 },
+                            grid: { stroke: '#333', strokeWidth: 0.5 }
+                          }}
+                        />
+                      </VictoryChart>
+                    </View>
+                  </View>
+                </>
+              );
+              
+            case 'avanzado':
+              return (
+                <View style={styles.statsDetailsContainer}>
+                  {/* Categorías de estadísticas - usar las definidas en este contexto */}
+                  {statCategories.map(renderStatCategory)}
+                </View>
+              );
+              
+            default:
+              return null;
+          }
+        };
+        
         return (
           <View style={styles.tabContent}>
-            {/* Estadísticas clave con barras de progreso */}
-            <View style={styles.statsSection}>
-              <Text style={styles.statsSectionTitle}>Estadísticas Clave</Text>
-              <View style={styles.statsContainer}>
-                {keyStats.map(renderProgressBar)}
-              </View>
+            {/* Sub-tabs para estadísticas */}
+            <View style={styles.statsSubTabsContainer}>
+              <StatsSubTab 
+                title="Resumen" 
+                active={statsSubTab === 'resumen'} 
+                onPress={() => setStatsSubTab('resumen')}
+              />
+              <StatsSubTab 
+                title="Gráfico" 
+                active={statsSubTab === 'grafico'} 
+                onPress={() => setStatsSubTab('grafico')}
+              />
+              <StatsSubTab 
+                title="Avanzado" 
+                active={statsSubTab === 'avanzado'} 
+                onPress={() => setStatsSubTab('avanzado')}
+              />
             </View>
             
-            {/* Gráfico de barras */}
-            <View style={styles.statsSection}>
-              <Text style={styles.statsSectionTitle}>Comparación de Estadísticas</Text>
-              <View style={styles.statsContainer}>
-                <VictoryChart
-                  height={300}
-                  padding={{ top: 40, bottom: 60, left: 40, right: 40 }}
-                  domainPadding={{ x: 30 }}>
-                  <VictoryLegend
-                    x={125}
-                    y={0}
-                    orientation="horizontal"
-                    gutter={20}
-                    data={[
-                      { name: match.homeTeam.name, symbol: { fill: '#00ff87' } },
-                      { name: match.awayTeam.name, symbol: { fill: '#ff4d4d' } },
-                    ]}
-                  />
-                  <VictoryGroup offset={20}>
-                    <VictoryBar
-                      data={statsData}
-                      y="home"
-                      style={{ data: { fill: '#00ff87' } }}
-                    />
-                    <VictoryBar
-                      data={statsData}
-                      y="away"
-                      style={{ data: { fill: '#ff4d4d' } }}
-                    />
-                  </VictoryGroup>
-                  <VictoryAxis
-                    style={{
-                      axis: { stroke: '#333' },
-                      tickLabels: { fill: '#888', fontSize: 12, angle: -45 }
-                    }}
-                  />
-                  <VictoryAxis
-                    dependentAxis
-                    style={{
-                      axis: { stroke: '#333' },
-                      tickLabels: { fill: '#888', fontSize: 12 }
-                    }}
-                  />
-                </VictoryChart>
-              </View>
-            </View>
+            {/* Contenido del subtab activo */}
+            {renderStatsContent()}
           </View>
         );
       case 'detalles':
-        // Agrupar estadísticas por categorías
-        const statCategories = [
+        // Verificar si las estadísticas están disponibles
+        const hasStats = match.stats && typeof match.stats === 'object';
+        
+        // Usamos la misma estructura de categorías que en estadísticas, pero con otro nombre para evitar conflictos
+        const detailsCategories = [
           {
             title: "Ataque",
             icon: "⚔️",
@@ -865,8 +1132,8 @@ export default function MatchDetailScreen() {
           { label: "Árbitro", value: "Mateu Lahoz" },
         ];
         
-        // Renderizar una categoría de estadísticas
-        const renderStatCategory = (category) => (
+        // Renderizar una categoría de estadísticas (versión para detalles)
+        const renderDetailCategory = (category) => (
           <View key={category.title} style={styles.statCategoryContainer}>
             <View style={styles.statCategoryHeader}>
               <Text style={styles.statCategoryIcon}>{category.icon}</Text>
@@ -874,8 +1141,14 @@ export default function MatchDetailScreen() {
             </View>
             <View style={styles.detailedStats}>
               {category.stats.map(stat => {
-                const value = match.stats[stat.key];
+                // Verificación adicional para evitar error si stats[stat.key] es undefined
+                const value = match.stats && match.stats[stat.key];
                 if (!value) return null;
+                
+                // Verificar si el valor existe
+                if (!value || typeof value !== 'object' || !('home' in value) || !('away' in value)) {
+                  return null;
+                }
                 
                 // Calcular la diferencia para destacar mejor equipo
                 const diff = value.home - value.away;
@@ -928,7 +1201,7 @@ export default function MatchDetailScreen() {
             {/* Estadísticas agrupadas por categorías */}
             <View style={styles.matchInfoContainer}>
               <Text style={styles.matchInfoTitle}>Estadísticas Detalladas</Text>
-              {statCategories.map(renderStatCategory)}
+              {detailsCategories.map(renderDetailCategory)}
             </View>
           </View>
         );
@@ -964,25 +1237,26 @@ export default function MatchDetailScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Match Header - siempre visible */}
-      <View style={styles.header}>
-        <View style={styles.team}>
-          <Image source={{ uri: match.homeTeam.logo }} style={styles.teamLogo} />
-          <Text style={styles.teamName}>{match.homeTeam.name}</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* Match Header - siempre visible */}
+        <View style={styles.header}>
+          <View style={styles.team}>
+            <Image source={{ uri: match.homeTeam.logo }} style={styles.teamLogo} />
+            <Text style={styles.teamName} numberOfLines={1}>{match.homeTeam.name}</Text>
+          </View>
+          
+          <View style={styles.score}>
+            <Text style={styles.scoreText}>
+              {match.homeTeam.score} - {match.awayTeam.score}
+            </Text>
+          </View>
+          
+          <View style={styles.team}>
+            <Image source={{ uri: match.awayTeam.logo }} style={styles.teamLogo} />
+            <Text style={styles.teamName} numberOfLines={1}>{match.awayTeam.name}</Text>
+          </View>
         </View>
-        
-        <View style={styles.score}>
-          <Text style={styles.scoreText}>
-            {match.homeTeam.score} - {match.awayTeam.score}
-          </Text>
-        </View>
-        
-        <View style={styles.team}>
-          <Image source={{ uri: match.awayTeam.logo }} style={styles.teamLogo} />
-          <Text style={styles.teamName}>{match.awayTeam.name}</Text>
-        </View>
-      </View>
 
       {/* Tabs Navigation */}
       <View style={styles.tabsContainer}>
@@ -1013,10 +1287,17 @@ export default function MatchDetailScreen() {
         {renderContent()}
       </ScrollView>
     </View>
+    </SafeAreaView>
   );
-}
+};
+
+export default MatchDetailScreen;
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#121212',
+  },
   container: {
     flex: 1,
     backgroundColor: '#121212',
@@ -1024,41 +1305,64 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
     backgroundColor: '#1a1a1a',
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingVertical: 12,
+    marginTop: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   team: {
     flex: 1,
     alignItems: 'center',
+    paddingHorizontal: 4,
   },
   teamLogo: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 50,
+    height: 50,
+    // Eliminado el borderRadius para mostrar los logos en su forma original
   },
   teamName: {
     color: '#fff',
-    fontSize: 16,
-    marginTop: 8,
+    fontSize: 14,
+    marginTop: 6,
     textAlign: 'center',
     fontFamily: 'Inter_600SemiBold',
+    maxWidth: '100%',
+    borderWidth: "1px"
   },
   score: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.3)',
   },
   scoreText: {
     color: '#fff',
-    fontSize: 32,
+    fontSize: 20,
     fontFamily: 'Inter_700Bold',
+    textShadowColor: 'rgba(0, 255, 135, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
   tabsContainer: {
     flexDirection: 'row',
     backgroundColor: '#222',
     borderBottomWidth: 1,
     borderBottomColor: '#333',
-    height: 50,
+    height: 52,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   tabButton: {
     flex: 1,
@@ -1067,16 +1371,17 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   activeTabButton: {
-    borderBottomWidth: 2,
+    borderBottomWidth: 3,
     borderBottomColor: '#00ff87',
+    backgroundColor: '#292929',
   },
   tabButtonText: {
     color: '#888',
     fontSize: 14,
-    fontFamily: 'Inter_400Regular',
+    fontFamily: 'Inter_500Medium',
   },
   activeTabButtonText: {
-    color: '#fff',
+    color: '#00ff87',
     fontFamily: 'Inter_600SemiBold',
   },
   // Sub-tabs styling for alineaciones
@@ -1561,10 +1866,75 @@ const styles = StyleSheet.create({
   progressBarHome: {
     backgroundColor: '#00ff87',
     height: '100%',
+    borderTopRightRadius: 2,
+    borderBottomRightRadius: 2,
   },
   progressBarAway: {
     backgroundColor: '#ff4d4d',
     height: '100%',
+    borderTopLeftRadius: 2,
+    borderBottomLeftRadius: 2,
+  },
+  
+  // Nuevos estilos para el submenú de estadísticas
+  statsSubTabsContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#2a2a2a',
+    borderRadius: 8,
+    marginBottom: 16,
+    height: 40,
+    padding: 3,
+  },
+  statsSubTabButton: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 6,
+  },
+  activeStatsSubTabButton: {
+    backgroundColor: '#3a3a3a',
+  },
+  statsSubTabText: {
+    color: '#888',
+    fontSize: 13,
+    fontFamily: 'Inter_400Regular',
+  },
+  activeStatsSubTabText: {
+    color: '#00ff87',
+    fontFamily: 'Inter_600SemiBold',
+  },
+  teamStatValue: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 60,
+    justifyContent: 'center',
+  },
+  statsTeamLogo: {
+    width: 30,
+    height: 30,
+    marginBottom: 5,
+  },
+  statsTeamName: {
+    color: '#fff',
+    fontSize: 12,
+    textAlign: 'center',
+    fontFamily: 'Inter_500Medium',
+  },
+  statsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+  teamHeaderItem: {
+    alignItems: 'center',
+  },
+  statsDetailsContainer: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 12,
+    padding: 16,
+    width: '100%',
   },
   
   // Detalles del partido

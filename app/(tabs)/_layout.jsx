@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Heart, Chrome as Home, Trophy } from 'lucide-react-native';
+import { Heart, Chrome as Home, Trophy, Rss, UserCircle } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
@@ -11,10 +11,7 @@ export default function TabLayout() {
         },
         tabBarActiveTintColor: '#00ff87',
         tabBarInactiveTintColor: '#888',
-        headerStyle: {
-          backgroundColor: '#1a1a1a',
-        },
-        headerTintColor: '#fff',
+        headerShown: false // Ocultar el header para controlarlo desde cada pantalla
       }}>
       <Tabs.Screen
         name="index"
@@ -35,6 +32,20 @@ export default function TabLayout() {
         options={{
           title: 'Favoritos',
           tabBarIcon: ({ color, size }) => <Heart size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="news"
+        options={{
+          title: 'Noticias',
+          tabBarIcon: ({ color, size }) => <Rss size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="players"
+        options={{
+          title: 'Jugadores',
+          tabBarIcon: ({ color, size }) => <UserCircle size={size} color={color} />,
         }}
       />
     </Tabs>
