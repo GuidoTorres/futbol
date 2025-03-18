@@ -47,35 +47,26 @@ export default function MatchesScreen() {
     loadMatches();
   }, [selectedDate, getMatchesForDate]);
   
-  // Datos estáticos para simular la respuesta del API de búsqueda (para mejorar rendimiento)
-  const dummySearchResults = [
-    {
-      id: 1175,
-      title: "Ethan Mbappé",
-      image: "https://api.sofascore.app/api/v1/player/1402698/image",
-      type: "player"
-    },
-    {
-      id: 15,
-      title: "Kylian Mbappé",
-      image: "https://api.sofascore.app/api/v1/player/826643/image",
-      type: "player"
-    }
-  ];
-  
-  // Función para buscar cuando cambia la consulta - usando datos locales para mayor velocidad
+  // Función para buscar usando la API con cada letra ingresada
   useEffect(() => {
-    if (searchQuery.trim().length > 0 && isSearchActive) {
-      // Usar los datos de ejemplo para una respuesta instantánea
-      const filteredResults = dummySearchResults.filter(item => 
-        item.title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setSearchResults(filteredResults);
-      setShowSearchResults(filteredResults.length > 0);
-    } else {
-      setShowSearchResults(false);
-      setSearchResults([]);
-    }
+    const handleSearch = async () => {
+      if (searchQuery.trim().length > 0 && isSearchActive) {
+        try {
+          const data = await searchData(searchQuery);
+          if (data && data.results) {
+            setSearchResults(data.results);
+            setShowSearchResults(true);
+          }
+        } catch (error) {
+          console.error('Error buscando:', error);
+        }
+      } else {
+        setShowSearchResults(false);
+        setSearchResults([]);
+      }
+    };
+    
+    handleSearch();
   }, [searchQuery, isSearchActive]);
   
   // Función para refrescar los datos
@@ -206,15 +197,23 @@ export default function MatchesScreen() {
           )}
         </View>
         
-        {/* Resultados de búsqueda */}
-        {isSearchActive && showSearchResults && searchResults.length > 0 && (
+        {/* Resultados de búsqueda - siempre renderizamos el contenedor cuando está activo */}
+        {isSearchActive && (
           <View style={styles.searchResultsContainer}>
-            <FlatList
-              data={searchResults}
-              renderItem={renderSearchItem}
-              keyExtractor={(item) => item.id.toString()}
-              style={styles.searchResultsList}
-            />
+            {searchResults.length > 0 ? (
+              <FlatList
+                data={searchResults}
+                renderItem={renderSearchItem}
+                keyExtractor={(item) => item.id.toString()}
+                style={styles.searchResultsList}
+                keyboardShouldPersistTaps="handled"
+                initialNumToRender={10}
+              />
+            ) : searchQuery.trim().length > 0 ? (
+              <View style={styles.emptySearchResultItem}>
+                <Text style={styles.emptySearchText}>Buscando "{searchQuery}"...</Text>
+              </View>
+            ) : null}
           </View>
         )}
         
@@ -484,6 +483,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontFamily: 'Inter_500Medium',
+  },
+  emptySearchResultItem: {
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptySearchText: {
+    color: '#aaa',
+    fontSize: 14,
+    fontFamily: 'Inter_400Regular',
   },
   scrollContent: {
     paddingBottom: 20,
