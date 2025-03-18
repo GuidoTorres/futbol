@@ -49,8 +49,8 @@ export default function MatchesScreen() {
   
   // Función para buscar cuando cambia la consulta
   useEffect(() => {
-    const searchTimeout = setTimeout(async () => {
-      if (searchQuery.trim().length > 2 && isSearchActive) {
+    const handleSearch = async () => {
+      if (searchQuery.trim().length > 0 && isSearchActive) {
         try {
           const data = await searchData(searchQuery);
           setSearchResults(data.results || []);
@@ -63,9 +63,9 @@ export default function MatchesScreen() {
         setShowSearchResults(false);
         setSearchResults([]);
       }
-    }, 300);
+    };
 
-    return () => clearTimeout(searchTimeout);
+    handleSearch();
   }, [searchQuery, isSearchActive]);
   
   // Función para refrescar los datos
@@ -149,14 +149,8 @@ export default function MatchesScreen() {
     </TouchableOpacity>
   );
   
-  // Filtrar partidos basados en la búsqueda
-  const filteredMatches = searchQuery.trim() === '' 
-    ? matchesForSelectedDate 
-    : matchesForSelectedDate.filter(match => 
-        match.homeTeam.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        match.awayTeam.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        match.league.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  // Siempre mostramos todos los partidos
+  const filteredMatches = matchesForSelectedDate;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -203,7 +197,7 @@ export default function MatchesScreen() {
         </View>
         
         {/* Resultados de búsqueda */}
-        {showSearchResults && searchResults.length > 0 && (
+        {isSearchActive && showSearchResults && searchResults.length > 0 && (
           <View style={styles.searchResultsContainer}>
             <FlatList
               data={searchResults}
