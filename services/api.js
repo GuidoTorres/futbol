@@ -1,81 +1,110 @@
 import axios from 'axios';
-import { Platform } from 'react-native';
+import { API_SETTINGS } from '../config/api.js';
 
-// El problema parece ser que estamos intentando conectar a 127.0.0.1:3000 
-// pero el servidor está en otra IP o la app no puede conectarse a esa dirección
-
-// SOLUCIÓN: Especificar directamente la IP de tu computadora
-// Esta es la opción más confiable para dispositivos físicos y emuladores
-const API_URL = 'http://192.168.0.103:3000'; // IMPORTANTE: REEMPLAZA ESTO CON TU IP REAL
-
-// Si necesitas cambiar la IP según el entorno, puedes usar esta lógica:
-/*
-// Para web - localhost normal
-const WEB_URL = 'http://localhost:3000';
-
-// Para emulador Android (10.0.2.2 es el alias para localhost de la máquina host)
-const ANDROID_EMULATOR_URL = 'http://10.0.2.2:3000'; 
-
-// Para iOS emulador o dispositivo físico, usar IP real
-const IOS_URL = 'http://192.168.0.103:3000'; // REEMPLAZA CON TU IP
-
-// Detectar el entorno actual para usar la URL correcta
-const getApiUrl = () => {
-  // Verificar si estamos en web o nativo
-  const isWeb = typeof document !== 'undefined';
-  
-  if (isWeb) {
-    return WEB_URL;
-  }
-  
-  // Detectar iOS o Android
-  const isIOS = Platform.OS === 'ios';
-  return isIOS ? IOS_URL : ANDROID_EMULATOR_URL;
-};
-
-const API_URL = getApiUrl();
-*/
-
-// Configuración y creación de instancia axios
+// Crear instancia de axios con configuración mejorada
 const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 15000, // 15 segundos
+  baseURL: API_SETTINGS.baseURL,
+  timeout: API_SETTINGS.timeout,
+  headers: API_SETTINGS.headers,
 });
 
-// Interceptores para depuración
+// Función para implementar reintentos
+const axiosRetry = async (config, retries = API_SETTINGS.retries) => {
+  try {
+    return await api(config);
+  } catch (error) {
+    if (retries > 0 && shouldRetry(error)) {
+      console.log(`🔄 Retrying request... (${API_SETTINGS.retries - retries + 1}/${API_SETTINGS.retries})`);
+      await new Promise(resolve => setTimeout(resolve, API_SETTINGS.retryDelay));
+      return axiosRetry(config, retries - 1);
+    }
+    throw error;
+  }
+};
+
+// Determinar si se debe reintentar la petición
+const shouldRetry = (error) => {
+  return (
+    !error.response || // Error de red
+    error.response.status >= 500 || // Error del servidor
+    error.response.status === 408 || // Timeout
+    error.code === 'ECONNABORTED' // Timeout de axios
+  );
+};
+
+// Interceptores para logging y manejo de errores
 api.interceptors.request.use(
   config => {
-    console.log(`🚀 Request: ${config.method.toUpperCase()} ${config.baseURL}${config.url}`);
+    const method = config.method?.toUpperCase() || 'GET';
+    const url = `${config.baseURL}${config.url}`;
+    console.log(`🚀 API Request: ${method} ${url}`);
+    
+    // Agregar timestamp para debugging
+    config.metadata = { startTime: new Date() };
+    
     return config;
   },
   error => {
-    console.error('❌ Request Error:', error);
+    console.error('❌ Request Setup Error:', error);
     return Promise.reject(error);
   }
 );
 
 api.interceptors.response.use(
   response => {
-    console.log(`✅ Response: ${response.status} from ${response.config.url}`);
+    const duration = new Date() - response.config.metadata.startTime;
+    console.log(`✅ API Response: ${response.status} (${duration}ms) from ${response.config.url}`);
     return response;
   },
   error => {
+    const duration = error.config?.metadata ? new Date() - error.config.metadata.startTime : 0;
+    
     if (error.response) {
-      // La solicitud fue hecha y el servidor respondió con un código de estado
-      // que cae fuera del rango 2xx
-      console.error(`❌ Response Error: ${error.response.status}`, error.response.data);
+      // El servidor respondió con un código de error
+      console.error(`❌ API Error: ${error.response.status} (${duration}ms)`, {
+        url: error.config?.url,
+        data: error.response.data,
+        status: error.response.status
+      });
     } else if (error.request) {
-      // La solicitud fue hecha pero no se recibió respuesta
-      console.error('❌ No Response Error:', error.request);
+      // La petición se hizo pero no hubo respuesta
+      console.error(`❌ Network Error (${duration}ms):`, {
+        url: error.config?.url,
+        message: error.message,
+        code: error.code
+      });
     } else {
-      // Ocurrió un error al configurar la solicitud
-      console.error('❌ Error:', error.message);
+      // Error en la configuración de la petición
+      console.error('❌ Request Configuration Error:', error.message);
     }
+    
     return Promise.reject(error);
   }
 );
+
+// Funciones helper para peticiones comunes
+export const apiHelpers = {
+  // GET con reintentos automáticos
+  get: (url, config = {}) => axiosRetry({ ...config, method: 'get', url }),
+  
+  // POST con reintentos automáticos
+  post: (url, data, config = {}) => axiosRetry({ ...config, method: 'post', url, data }),
+  
+  // PUT con reintentos automáticos
+  put: (url, data, config = {}) => axiosRetry({ ...config, method: 'put', url, data }),
+  
+  // DELETE con reintentos automáticos
+  delete: (url, config = {}) => axiosRetry({ ...config, method: 'delete', url }),
+  
+  // Verificar conectividad
+  checkConnection: async () => {
+    try {
+      const response = await api.get('/');
+      return { connected: true, response };
+    } catch (error) {
+      return { connected: false, error };
+    }
+  }
+};
 
 export default api;

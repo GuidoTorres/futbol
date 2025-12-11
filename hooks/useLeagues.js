@@ -21,7 +21,37 @@ export function useLeagues() {
           data = regularData || [];
         }
 
-        setLeagues(data);
+        // Enrich each league with standings and top scorers
+        const enrichedLeagues = await Promise.all(
+          data.map(async (league) => {
+            try {
+              // Fetch standings for this league
+              const standingsResponse = await fetch(`${process.env.EXPO_PUBLIC_API_URL || 'http://192.168.0.225:3000'}/api/leagues/${league.id}/standings`);
+              const standingsData = await standingsResponse.json();
+              
+              // Transform standings to match expected format
+              const standings = standingsData.standings?.slice(0, 3).map(s => ({
+                position: s.position || s.played,
+                team: s.team?.name || 'Unknown',
+                teamId: s.team?.id,
+                points: s.points || 0,
+                logo: s.team?.logo
+              })) || [];
+
+              // For now, we don't have a top scorers endpoint, so leave it null
+              return {
+                ...league,
+                standings,
+                topScorer: null // Will be added when endpoint is available
+              };
+            } catch (err) {
+              console.warn(`Could not fetch additional data for league ${league.id}:`, err.message);
+              return league;
+            }
+          })
+        );
+
+        setLeagues(enrichedLeagues);
       } catch (err) {
         console.error('Error cargando ligas:', err);
         setError(err.message);

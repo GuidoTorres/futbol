@@ -1,12 +1,93 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, ActivityIndicator, RefreshControl, SafeAreaView, Modal, Platform, TextInput, FlatList } from 'react-native';
-import { format, eachDayOfInterval, addDays, startOfToday, subMonths, addMonths, getYear, getMonth, getDate, parseISO } from 'date-fns';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  RefreshControl,
+  SafeAreaView,
+  Modal,
+  Platform,
+  FlatList,
+} from 'react-native';
+import {
+  format,
+  eachDayOfInterval,
+  addDays,
+  startOfToday,
+} from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useRouter } from 'expo-router';
 import { useMatches } from '../../hooks/useMatches';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Search, X } from 'lucide-react-native';
+import { Search, X, Calendar } from 'lucide-react-native';
 import { searchData } from '../../services';
+import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
+import Card from '../../components/ui/Card';
+import LoadingState from '../../components/ui/LoadingState';
+import EmptyState from '../../components/ui/EmptyState';
+import ErrorState from '../../components/ui/ErrorState';
+import MatchCard from '../../components/MatchCard';
+import TeamLogo from '../../components/TeamLogo';
+import { colors, typography, spacing, borderRadius, shadows } from '../../styles/theme';
+
+// Mock data for preview
+const MOCK_MATCHES = [
+  {
+    id: 1,
+    homeTeam: { name: 'Real Madrid', logo: 'https://media.api-sports.io/football/teams/541.png' },
+    awayTeam: { name: 'Barcelona', logo: 'https://media.api-sports.io/football/teams/529.png' },
+    homeScore: 2,
+    awayScore: 1,
+    status: 'FT',
+    time: '90+3',
+    league: 'La Liga',
+    date: new Date(),
+  },
+  {
+    id: 2,
+    homeTeam: { name: 'Manchester City', logo: 'https://media.api-sports.io/football/teams/50.png' },
+    awayTeam: { name: 'Liverpool', logo: 'https://media.api-sports.io/football/teams/40.png' },
+    homeScore: 1,
+    awayScore: 1,
+    status: 'LIVE',
+    time: '67',
+    league: 'Premier League',
+    date: new Date(),
+  },
+  {
+    id: 3,
+    homeTeam: { name: 'Bayern Munich', logo: 'https://media.api-sports.io/football/teams/157.png' },
+    awayTeam: { name: 'Borussia Dortmund', logo: 'https://media.api-sports.io/football/teams/165.png' },
+    homeScore: null,
+    awayScore: null,
+    status: 'NS',
+    time: '20:00',
+    league: 'Bundesliga',
+    date: new Date(),
+  },
+  {
+    id: 4,
+    homeTeam: { name: 'PSG', logo: 'https://media.api-sports.io/football/teams/85.png' },
+    awayTeam: { name: 'Marseille', logo: 'https://media.api-sports.io/football/teams/81.png' },
+    homeScore: null,
+    awayScore: null,
+    status: 'NS',
+    time: '21:00',
+    league: 'Ligue 1',
+    date: new Date(),
+  },
+];
+
+const MOCK_SEARCH_RESULTS = [
+  { id: 1, type: 'team', name: 'Real Madrid', league: 'La Liga', logo: 'https://media.api-sports.io/football/teams/541.png' },
+  { id: 2, type: 'player', name: 'Lionel Messi', team: 'Inter Miami', photo: 'https://cdn.sofifa.net/players/158/023/25_120.png' },
+  { id: 3, type: 'team', name: 'Manchester City', league: 'Premier League', logo: 'https://media.api-sports.io/football/teams/50.png' },
+  { id: 4, type: 'player', name: 'Cristiano Ronaldo', team: 'Al Nassr', photo: 'https://cdn.sofifa.net/players/020/801/25_120.png' },
+];
 
 export default function MatchesScreen() {
   const router = useRouter();
@@ -14,6 +95,7 @@ export default function MatchesScreen() {
   const [selectedDate, setSelectedDate] = useState(today);
   const [matchesForSelectedDate, setMatchesForSelectedDate] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [useMockData, setUseMockData] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showModalPicker, setShowModalPicker] = useState(false);
@@ -21,36 +103,55 @@ export default function MatchesScreen() {
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [error, setError] = useState(null);
   const { getMatchesForDate } = useMatches();
-  
+
   // Obtener los próximos 14 días para el calendario
   const dates = eachDayOfInterval({
     start: today,
     end: addDays(today, 14),
   });
-  
+
+  // Function to load mock data
+  const loadMockData = () => {
+    setUseMockData(true);
+    setMatchesForSelectedDate(MOCK_MATCHES);
+    setLoading(false);
+    setError(null);
+  };
+
   // Cargar partidos para la fecha seleccionada
   useEffect(() => {
     const loadMatches = async () => {
+      if (useMockData) {
+        setMatchesForSelectedDate(MOCK_MATCHES);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
+      setError(null);
       try {
         const matches = await getMatchesForDate(selectedDate);
         setMatchesForSelectedDate(matches);
       } catch (error) {
         console.error('Error cargando partidos:', error);
+        setError('No se pudieron cargar los partidos. Por favor, intenta de nuevo.');
         setMatchesForSelectedDate([]);
       } finally {
         setLoading(false);
       }
     };
-    
+
     loadMatches();
-  }, [selectedDate, getMatchesForDate]);
-  
+  }, [selectedDate, getMatchesForDate, useMockData]);
+
   // Función para buscar usando la API con cada letra ingresada
   useEffect(() => {
     const handleSearch = async () => {
       if (searchQuery.trim().length > 0 && isSearchActive) {
+        setSearchLoading(true);
         try {
           const data = await searchData(searchQuery);
           if (data && data.results) {
@@ -59,29 +160,43 @@ export default function MatchesScreen() {
           }
         } catch (error) {
           console.error('Error buscando:', error);
+          // Use mock data on error
+          setSearchResults(MOCK_SEARCH_RESULTS);
+          setShowSearchResults(true);
+        } finally {
+          setSearchLoading(false);
         }
       } else {
         setShowSearchResults(false);
         setSearchResults([]);
+        setSearchLoading(false);
       }
     };
-    
-    handleSearch();
+
+    const debounceTimer = setTimeout(handleSearch, 300);
+    return () => clearTimeout(debounceTimer);
   }, [searchQuery, isSearchActive]);
-  
+
   // Función para refrescar los datos
   const onRefresh = async () => {
     setRefreshing(true);
+    setError(null);
     try {
       const matches = await getMatchesForDate(selectedDate);
       setMatchesForSelectedDate(matches);
     } catch (error) {
       console.error('Error recargando partidos:', error);
+      setError('No se pudieron cargar los partidos. Por favor, intenta de nuevo.');
     } finally {
       setRefreshing(false);
     }
   };
-  
+
+  // Función para reintentar cargar partidos
+  const handleRetry = () => {
+    onRefresh();
+  };
+
   // Función para abrir el selector de fecha
   const openDatePicker = () => {
     if (Platform.OS === 'ios') {
@@ -90,23 +205,23 @@ export default function MatchesScreen() {
       setShowDatePicker(true);
     }
   };
-  
+
   // Función para manejar cambios en la fecha seleccionada
   const onDateChange = (event, date) => {
     if (Platform.OS === 'android') {
       setShowDatePicker(false);
     }
-    
+
     if (date) {
       setSelectedDate(date);
     }
   };
-  
+
   // Función para cerrar el modal (solo iOS)
   const onModalClose = () => {
     setShowModalPicker(false);
   };
-  
+
   // Función para activar la búsqueda
   const toggleSearch = () => {
     setIsSearchActive(!isSearchActive);
@@ -115,13 +230,13 @@ export default function MatchesScreen() {
       setShowSearchResults(false);
     }
   };
-  
+
   // Función para limpiar la búsqueda
   const clearSearch = () => {
     setSearchQuery('');
     setShowSearchResults(false);
   };
-  
+
   // Función para manejar la selección de un resultado de búsqueda
   const handleSearchResultPress = (result) => {
     if (result.type === 'player') {
@@ -135,21 +250,22 @@ export default function MatchesScreen() {
     setShowSearchResults(false);
     setIsSearchActive(false);
   };
-  
+
   // Renderizar un elemento de resultado de búsqueda
   const renderSearchItem = ({ item }) => (
-    <TouchableOpacity 
-      style={styles.searchResultItem} 
+    <TouchableOpacity
+      style={styles.searchResultItem}
       onPress={() => handleSearchResultPress(item)}
+      activeOpacity={0.7}
     >
-      <Image 
-        source={{ uri: item.image }} 
-        style={styles.searchResultImage} 
-      />
-      <Text style={styles.searchResultText}>{item.title}</Text>
+      <TeamLogo uri={item.image} size="sm" rounded />
+      <View style={styles.searchResultContent}>
+        <Text style={styles.searchResultText}>{item.title}</Text>
+        <Text style={styles.searchResultType}>{item.type}</Text>
+      </View>
     </TouchableOpacity>
   );
-  
+
   // Mostramos todos los partidos independientemente del estado del buscador
   const filteredMatches = matchesForSelectedDate;
 
@@ -160,47 +276,67 @@ export default function MatchesScreen() {
         <View style={styles.header}>
           {isSearchActive ? (
             <View style={styles.searchContainer}>
-              <View style={styles.searchInputContainer}>
-                <TextInput
-                  style={styles.searchInput}
+              <View style={styles.searchInputWrapper}>
+                <Input
                   placeholder="Buscar jugadores, equipos, ligas..."
-                  placeholderTextColor="#888"
                   value={searchQuery}
                   onChangeText={setSearchQuery}
-                  autoFocus
+                  clearable
+                  icon={<Search size={20} color={colors.text.tertiary} />}
+                  style={styles.searchInputComponent}
+                  inputStyle={styles.searchInputText}
                 />
-                {searchQuery.length > 0 && (
-                  <TouchableOpacity onPress={clearSearch} style={styles.searchClearButton}>
-                    <X size={16} color="#888" />
-                  </TouchableOpacity>
-                )}
               </View>
-              <TouchableOpacity onPress={toggleSearch} style={styles.searchButton}>
-                <X size={22} color="#00ff87" />
-              </TouchableOpacity>
+              <Button
+                variant="ghost"
+                size="sm"
+                onPress={toggleSearch}
+                style={styles.closeSearchButton}
+              >
+                <X size={22} color={colors.primary} />
+              </Button>
             </View>
           ) : (
             <>
               <Text style={styles.appLogo}>⚽ FUTBOL APP</Text>
               <View style={styles.headerButtons}>
-                <TouchableOpacity style={styles.searchButton} onPress={toggleSearch}>
-                  <Search size={22} color="#00ff87" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.profileButton}>
-                  <Image 
-                    source={{ uri: 'https://ui-avatars.com/api/?name=User&background=00ff87&color=fff' }} 
-                    style={styles.profileImage} 
-                  />
-                </TouchableOpacity>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onPress={loadMockData}
+                  style={styles.iconButton}
+                >
+                  <Text style={styles.previewButtonText}>Vista Previa</Text>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onPress={toggleSearch}
+                  style={styles.iconButton}
+                >
+                  <Search size={22} color={colors.primary} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onPress={openDatePicker}
+                  style={styles.iconButton}
+                >
+                  <Calendar size={22} color={colors.primary} />
+                </Button>
               </View>
             </>
           )}
         </View>
-        
-        {/* Resultados de búsqueda - siempre renderizamos el contenedor cuando está activo */}
+
+        {/* Resultados de búsqueda */}
         {isSearchActive && (
           <View style={styles.searchResultsContainer}>
-            {searchResults.length > 0 ? (
+            {searchLoading ? (
+              <View style={styles.searchLoadingContainer}>
+                <LoadingState message="Buscando..." size="sm" />
+              </View>
+            ) : searchResults.length > 0 ? (
               <FlatList
                 data={searchResults}
                 renderItem={renderSearchItem}
@@ -210,13 +346,16 @@ export default function MatchesScreen() {
                 initialNumToRender={10}
               />
             ) : searchQuery.trim().length > 0 ? (
-              <View style={styles.emptySearchResultItem}>
-                <Text style={styles.emptySearchText}>Buscando "{searchQuery}"...</Text>
+              <View style={styles.emptySearchContainer}>
+                <EmptyState
+                  title="Sin resultados"
+                  message={`No se encontraron resultados para "${searchQuery}"`}
+                />
               </View>
             ) : null}
           </View>
         )}
-        
+
         <ScrollView
           refreshControl={
             <RefreshControl
@@ -228,143 +367,161 @@ export default function MatchesScreen() {
           }
           contentContainerStyle={styles.scrollContent}
         >
-        {/* Tira de Calendario con botón de selección */}
-        <View style={styles.calendarContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dateList}>
-            {dates.map((date) => {
-              const isSelected = date.toISOString().split('T')[0] === selectedDate.toISOString().split('T')[0];
-              
-              return (
-                <TouchableOpacity
-                  key={date.toISOString()}
-                  style={[
-                    styles.dateItem,
-                    isSelected && styles.dateItemActive,
-                  ]}
-                  onPress={() => setSelectedDate(date)}>
-                  <Text style={[styles.dayName, isSelected && styles.activeText]}>
-                    {format(date, 'EEE', { locale: es })}
-                  </Text>
-                  <Text style={[styles.dayNumber, isSelected && styles.activeText]}>
-                    {format(date, 'd')}
-                  </Text>
-                  <Text style={[styles.monthName, isSelected && styles.activeText]}>
-                    {format(date, 'MMM', { locale: es })}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-          
-          {/* Botón para abrir calendario completo */}
-          <TouchableOpacity
-            style={styles.calendarButton}
-            onPress={openDatePicker}
-          >
-            <Text style={styles.calendarButtonText}>🗓️</Text>
-          </TouchableOpacity>
-        </View>
-        
-        {/* Date Picker para Android */}
-        {Platform.OS === 'android' && showDatePicker && (
-          <DateTimePicker
-            value={selectedDate}
-            mode="date"
-            display="default"
-            onChange={onDateChange}
-            minimumDate={new Date(2020, 0, 1)}
-            maximumDate={new Date(2030, 11, 31)}
-          />
-        )}
-        
-        {/* Modal Date Picker para iOS */}
-        {Platform.OS === 'ios' && (
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={showModalPicker}
-            onRequestClose={onModalClose}
-          >
-            <View style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-                <View style={styles.modalHeader}>
-                  <TouchableOpacity onPress={onModalClose} style={styles.modalButton}>
-                    <Text style={styles.modalButtonText}>Cancelar</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.modalTitle}>Seleccionar fecha</Text>
-                  <TouchableOpacity onPress={onModalClose} style={styles.modalButton}>
-                    <Text style={styles.modalButtonText}>OK</Text>
-                  </TouchableOpacity>
-                </View>
-                <DateTimePicker
-                  value={selectedDate}
-                  mode="date"
-                  display="spinner"
-                  onChange={onDateChange}
-                  minimumDate={new Date(2020, 0, 1)}
-                  maximumDate={new Date(2030, 11, 31)}
-                  style={styles.datePicker}
-                />
-              </View>
-            </View>
-          </Modal>
-        )}
+          {/* Tira de Calendario con botón de selección */}
+          <View style={styles.calendarContainer}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.dateList}
+              contentContainerStyle={styles.dateListContent}
+            >
+              {dates.map((date) => {
+                const isSelected =
+                  date.toISOString().split('T')[0] ===
+                  selectedDate.toISOString().split('T')[0];
 
-        {/* Lista de Partidos */}
-        <View style={styles.matchesContainer}>
-          <Text style={styles.dateHeader}>
-            {format(selectedDate, "EEEE, d 'de' MMMM", { locale: es })}
-          </Text>
-          
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#00ff87" />
-              <Text style={styles.loadingText}>Cargando partidos...</Text>
-            </View>
-          ) : filteredMatches.length > 0 ? (
-            filteredMatches.map(match => (
-              <TouchableOpacity 
-                key={match.id} 
-                style={styles.matchCard}
-                onPress={() => router.push(`/match/${match.id}`)}
-              >
-                <View style={styles.leagueHeader}>
-                  <Text style={styles.leagueText}>{match.league}</Text>
-                </View>
-                
-                <View style={styles.matchInfo}>
-                  <TouchableOpacity 
-                    style={styles.team}
-                    onPress={() => router.push(`/team/${match.homeTeam.id}`)}
+                return (
+                  <Card
+                    key={date.toISOString()}
+                    variant={isSelected ? "elevated" : "default"}
+                    padding="sm"
+                    pressable
+                    onPress={() => setSelectedDate(date)}
+                    style={[
+                      styles.dateItem,
+                      isSelected && styles.dateItemActive,
+                    ]}
                   >
-                    <Image source={{ uri: match.homeTeam.logo }} style={styles.teamLogo} />
-                    <Text style={styles.teamName}>{match.homeTeam.name}</Text>
-                  </TouchableOpacity>
-                  
-                  <View style={styles.scoreContainer}>
-                    <Text style={styles.score}>
-                      {match.homeTeam.score} - {match.awayTeam.score}
+                    <Text
+                      style={[styles.dayName, isSelected && styles.activeText]}
+                    >
+                      {format(date, 'EEE', { locale: es })}
                     </Text>
-                    <Text style={styles.status}>{match.status}</Text>
-                  </View>
-                  
-                  <TouchableOpacity 
-                    style={styles.team}
-                    onPress={() => router.push(`/team/${match.awayTeam.id}`)}
-                  >
-                    <Image source={{ uri: match.awayTeam.logo }} style={styles.teamLogo} />
-                    <Text style={styles.teamName}>{match.awayTeam.name}</Text>
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            ))
-          ) : searchQuery.trim() !== '' ? (
-            <Text style={styles.noMatches}>No se encontraron resultados para "{searchQuery}"</Text>
-          ) : (
-            <Text style={styles.noMatches}>No hay partidos programados para este día</Text>
+                    <Text
+                      style={[
+                        styles.dayNumber,
+                        isSelected && styles.activeText,
+                      ]}
+                    >
+                      {format(date, 'd')}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.monthName,
+                        isSelected && styles.activeText,
+                      ]}
+                    >
+                      {format(date, 'MMM', { locale: es })}
+                    </Text>
+                  </Card>
+                );
+              })}
+            </ScrollView>
+          </View>
+
+          {/* Date Picker para Android */}
+          {Platform.OS === 'android' && showDatePicker && (
+            <DateTimePicker
+              value={selectedDate}
+              mode="date"
+              display="default"
+              onChange={onDateChange}
+              minimumDate={new Date(2020, 0, 1)}
+              maximumDate={new Date(2030, 11, 31)}
+            />
           )}
-        </View>
-      </ScrollView>
+
+          {/* Modal Date Picker para iOS */}
+          {Platform.OS === 'ios' && (
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={showModalPicker}
+              onRequestClose={onModalClose}
+            >
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <View style={styles.modalHeader}>
+                    <TouchableOpacity
+                      onPress={onModalClose}
+                      style={styles.modalButton}
+                    >
+                      <Text style={styles.modalButtonText}>Cancelar</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.modalTitle}>Seleccionar fecha</Text>
+                    <TouchableOpacity
+                      onPress={onModalClose}
+                      style={styles.modalButton}
+                    >
+                      <Text style={styles.modalButtonText}>OK</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <DateTimePicker
+                    value={selectedDate}
+                    mode="date"
+                    display="spinner"
+                    onChange={onDateChange}
+                    minimumDate={new Date(2020, 0, 1)}
+                    maximumDate={new Date(2030, 11, 31)}
+                    style={styles.datePicker}
+                  />
+                </View>
+              </View>
+            </Modal>
+          )}
+
+          {/* Lista de Partidos */}
+          <View style={styles.matchesContainer}>
+            <Text style={styles.dateHeader}>
+              {format(selectedDate, "EEEE, d 'de' MMMM", { locale: es })}
+            </Text>
+
+            {loading ? (
+              <LoadingState message="Cargando partidos..." />
+            ) : error ? (
+              <ErrorState
+                title="Error al cargar partidos"
+                message={error}
+                onRetry={handleRetry}
+              />
+            ) : filteredMatches.length > 0 ? (
+              <View style={styles.matchesList}>
+                {filteredMatches.map((match) => (
+                  <MatchCard
+                    key={match.id}
+                    match={{
+                      id: match.id,
+                      homeTeam: {
+                        name: match.homeTeam.name,
+                        logo: match.homeTeam.logo,
+                        id: match.homeTeam.id,
+                      },
+                      awayTeam: {
+                        name: match.awayTeam.name,
+                        logo: match.awayTeam.logo,
+                        id: match.awayTeam.id,
+                      },
+                      homeScore: match.homeTeam.score,
+                      awayScore: match.awayTeam.score,
+                      status: match.status,
+                      league: { name: match.league },
+                      date: match.date,
+                      time: match.time,
+                    }}
+                    variant="detailed"
+                    style={styles.matchCardItem}
+                  />
+                ))}
+              </View>
+            ) : (
+              <EmptyState
+                title="No hay partidos"
+                message="No hay partidos programados para este día"
+                icon={<Calendar size={64} color={colors.text.tertiary} />}
+              />
+            )}
+          </View>
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
@@ -373,95 +530,79 @@ export default function MatchesScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: colors.background.primary,
   },
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: colors.background.primary,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#1a1a1a',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    backgroundColor: colors.background.secondary,
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    height: 60,
+    borderBottomColor: colors.border.light,
+    ...shadows.base,
+    minHeight: 60,
     zIndex: 10,
   },
   appLogo: {
-    fontSize: 20,
-    color: '#00ff87',
-    fontFamily: 'Inter_700Bold',
+    fontSize: typography.fontSize.xl,
+    color: colors.primary,
+    fontFamily: typography.fontFamily.bold,
     letterSpacing: 0.5,
   },
   headerButtons: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.xs,
   },
-  searchButton: {
-    marginRight: 16,
-    padding: 4,
+  iconButton: {
+    minWidth: 44,
+    minHeight: 44,
+    padding: spacing.xs,
   },
-  profileButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: '#00ff87',
-  },
-  profileImage: {
-    width: '100%',
-    height: '100%',
+  previewButtonText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.primary,
+    fontFamily: typography.fontFamily.semiBold,
   },
   searchContainer: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.sm,
   },
-  searchInputContainer: {
+  searchInputWrapper: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#232323',
-    borderRadius: 20,
-    marginRight: 8,
-    height: 40,
   },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    paddingHorizontal: 16,
-    color: '#fff',
-    fontFamily: 'Inter_400Regular',
+  searchInputComponent: {
+    marginBottom: 0,
   },
-  searchClearButton: {
-    padding: 8,
-    marginRight: 4,
+  searchInputText: {
+    fontSize: typography.fontSize.base,
+  },
+  closeSearchButton: {
+    minWidth: 44,
+    minHeight: 44,
   },
   searchResultsContainer: {
     position: 'absolute',
     top: 60,
     left: 0,
     right: 0,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.background.secondary,
     zIndex: 999,
-    maxHeight: 300,
+    maxHeight: 400,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 6,
+    borderBottomColor: colors.border.light,
+    ...shadows.lg,
+  },
+  searchLoadingContainer: {
+    padding: spacing.xl,
   },
   searchResultsList: {
     width: '100%',
@@ -469,245 +610,136 @@ const styles = StyleSheet.create({
   searchResultItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    padding: spacing.base,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderBottomColor: colors.border.light,
+    gap: spacing.md,
   },
-  searchResultImage: {
-    width: 40,
-    height: 40,
-    marginRight: 16,
-    borderRadius: 20,
+  searchResultContent: {
+    flex: 1,
   },
   searchResultText: {
-    color: '#fff',
-    fontSize: 16,
-    fontFamily: 'Inter_500Medium',
+    color: colors.text.primary,
+    fontSize: typography.fontSize.base,
+    fontFamily: typography.fontFamily.medium,
+    marginBottom: spacing.xs,
   },
-  emptySearchResultItem: {
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+  searchResultType: {
+    color: colors.text.tertiary,
+    fontSize: typography.fontSize.sm,
+    fontFamily: typography.fontFamily.regular,
+    textTransform: 'capitalize',
   },
-  emptySearchText: {
-    color: '#aaa',
-    fontSize: 14,
-    fontFamily: 'Inter_400Regular',
+  emptySearchContainer: {
+    padding: spacing.xl,
   },
   scrollContent: {
-    paddingBottom: 20,
+    paddingBottom: spacing.xl,
   },
   calendarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.background.secondary,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    borderBottomColor: colors.border.light,
+    ...shadows.sm,
   },
   dateList: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: spacing.md,
   },
-  calendarButton: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    marginRight: 12,
-    marginLeft: 8,
-    backgroundColor: '#232323',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#00ff87',
-  },
-  calendarButtonText: {
-    fontSize: 20,
+  dateListContent: {
+    paddingHorizontal: spacing.sm,
+    gap: spacing.sm,
   },
   dateItem: {
-    padding: 12,
     alignItems: 'center',
-    minWidth: 72,
-    marginHorizontal: 5,
-    borderRadius: 14,
-    backgroundColor: '#232323',
-    borderWidth: 1,
-    borderColor: '#333',
+    minWidth: 70,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
   },
   dateItemActive: {
-    backgroundColor: 'rgba(0, 255, 135, 0.2)', 
-    borderColor: '#00ff87',
+    backgroundColor: `${colors.primary}20`,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
   },
   dayName: {
-    color: '#999',
-    fontSize: 12,
-    fontFamily: 'Inter_500Medium',
+    color: colors.text.tertiary,
+    fontSize: typography.fontSize.xs,
+    fontFamily: typography.fontFamily.medium,
     textTransform: 'capitalize',
+    marginBottom: spacing.xs,
   },
   dayNumber: {
-    color: '#fff',
-    fontSize: 22,
-    marginVertical: 4,
-    fontFamily: 'Inter_700Bold',
+    color: colors.text.primary,
+    fontSize: typography.fontSize['2xl'],
+    fontFamily: typography.fontFamily.bold,
+    marginVertical: spacing.xs,
   },
   monthName: {
-    color: '#999',
-    fontSize: 12,
-    fontFamily: 'Inter_500Medium',
+    color: colors.text.tertiary,
+    fontSize: typography.fontSize.xs,
+    fontFamily: typography.fontFamily.medium,
     textTransform: 'capitalize',
+    marginTop: spacing.xs,
   },
   activeText: {
-    color: '#00ff87',
+    color: colors.primary,
   },
   matchesContainer: {
-    padding: 16,
+    padding: spacing.base,
+    minHeight: 400,
   },
   dateHeader: {
-    color: '#fff',
-    fontSize: 18,
-    marginBottom: 16,
-    fontFamily: 'Inter_600SemiBold',
+    color: colors.text.primary,
+    fontSize: typography.fontSize.lg,
+    marginBottom: spacing.base,
+    fontFamily: typography.fontFamily.semiBold,
     textTransform: 'capitalize',
-    paddingLeft: 10,
+    paddingLeft: spacing.md,
     borderLeftWidth: 3,
-    borderLeftColor: '#00ff87',
+    borderLeftColor: colors.primary,
   },
-  matchCard: {
-    backgroundColor: '#1d1d1d',
-    marginBottom: 16,
-    borderRadius: 14,
-    overflow: 'hidden',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 2,
-    marginHorizontal: 12,
-    borderWidth: 1,
-    borderColor: '#333',
+  matchesList: {
+    gap: spacing.base,
   },
-  leagueHeader: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  leagueText: {
-    color: '#00ff87',
-    fontSize: 13,
-    fontFamily: 'Inter_600SemiBold',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  matchInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    justifyContent: 'space-between',
-    backgroundColor: '#1a1a1a',
-  },
-  team: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  teamLogo: {
-    width: 40,
-    height: 40,
-    // Eliminado el borderRadius para mostrar los logos en su forma original
-    marginBottom: 8,
-  },
-  teamName: {
-    color: '#fff',
-    fontSize: 14,
-    textAlign: 'center',
-    fontFamily: 'Inter_500Medium',
-    marginTop: 10,
-    paddingHorizontal: 5,
-    maxWidth: 100,
-  },
-  scoreContainer: {
-    alignItems: 'center',
-    paddingHorizontal: 15,
-    backgroundColor: 'rgba(0, 255, 135, 0.1)',
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  score: {
-    color: '#fff',
-    fontSize: 24,
-    fontFamily: 'Inter_700Bold',
-  },
-  status: {
-    color: '#00ff87',
-    fontSize: 11,
-    marginTop: 4,
-    fontFamily: 'Inter_600SemiBold',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  noMatches: {
-    color: '#888',
-    textAlign: 'center',
-    marginTop: 32,
-    fontSize: 16,
-    fontFamily: 'Inter_400Regular',
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    padding: 20,
-    borderRadius: 12,
-    marginHorizontal: 16,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  loadingContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  loadingText: {
-    color: '#888',
-    marginTop: 16,
-    fontSize: 14,
-    fontFamily: 'Inter_500Medium',
+  matchCardItem: {
+    marginBottom: spacing.sm,
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: colors.overlay,
   },
   modalContent: {
-    backgroundColor: '#1a1a1a',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 30,
+    backgroundColor: colors.background.secondary,
+    borderTopLeftRadius: borderRadius.xl,
+    borderTopRightRadius: borderRadius.xl,
+    paddingBottom: spacing['2xl'],
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 15,
+    padding: spacing.base,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderBottomColor: colors.border.light,
   },
   modalTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontFamily: 'Inter_600SemiBold',
+    color: colors.text.primary,
+    fontSize: typography.fontSize.lg,
+    fontFamily: typography.fontFamily.semiBold,
   },
   modalButton: {
-    padding: 8,
+    padding: spacing.sm,
   },
   modalButtonText: {
-    color: '#00ff87',
-    fontSize: 16,
-    fontFamily: 'Inter_500Medium',
+    color: colors.primary,
+    fontSize: typography.fontSize.base,
+    fontFamily: typography.fontFamily.medium,
   },
   datePicker: {
     height: 220,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.background.secondary,
   },
 });

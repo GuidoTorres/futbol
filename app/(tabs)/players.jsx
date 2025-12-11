@@ -1,332 +1,608 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TextInput, TouchableOpacity, ActivityIndicator, SafeAreaView } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Search, X } from 'lucide-react-native';
-import { usePlayers } from '../../hooks/usePlayers';
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  SafeAreaView,
+  RefreshControl,
+  Animated,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { Filter, ChevronDown } from "lucide-react-native";
+import { colors, typography, spacing, borderRadius, shadows } from "../../styles/theme";
+import { useResponsiveValue, useGridColumns } from "../../utils/responsive";
+import { Input, LoadingState, EmptyState, ErrorState, Card, Button, Badge } from "../../components/ui";
+import PlayerAvatar from "../../components/PlayerAvatar";
+import FilterPanel from "../../components/FilterPanel";
+import { usePlayers } from "../../hooks/usePlayers";
+import { searchPlayers } from "../../services/players";
+
+const SORT_OPTIONS = [
+  { id: "name", label: "Nombre" },
+  { id: "rating", label: "Valoración" },
+  { id: "goals", label: "Goles" },
+  { id: "assists", label: "Asistencias" },
+];
 
 export default function PlayersScreen() {
   const router = useRouter();
-  const { searchPlayersByName } = usePlayers();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearchActive, setIsSearchActive] = useState(false);
-  const [searchResults, setSearchResults] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { loading: hookLoading, error: hookError } = usePlayers();
+  
+  // State
+  const [players, setPlayers] = useState([]);
+  const [filteredPlayers, setFilteredPlayers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({});
+  const [sortBy, setSortBy] = useState("name");
+  const [sortMenuVisible, setSortMenuVisible] = useState(false);
 
-  // Manejar la búsqueda cuando cambia el texto
+  // Responsive
+  const numColumns = useGridColumns();
+  const cardPadding = useResponsiveValue({ base: spacing.md, md: spacing.base });
+
+  // Load initial data
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (searchQuery.trim().length >= 3) {
-        handleSearch();
-      }
-    }, 500);
+    loadPlayers();
+  }, []);
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery]);
+  // Apply search, filters, and sorting
+  useEffect(() => {
+    applyFiltersAndSort();
+  }, [players, searchQuery, activeFilters, sortBy]);
 
-  // Función para realizar la búsqueda
-  const handleSearch = async () => {
-    if (searchQuery.trim().length < 3) {
-      setSearchResults([]);
-      return;
-    }
-
-    setLoading(true);
+  const loadPlayers = async () => {
     try {
-      const results = await searchPlayersByName(searchQuery.trim());
-      setSearchResults(results);
+      setLoading(true);
       setError(null);
+      
+      // Mock data for now - replace with actual API call
+      const mockPlayers = generateMockPlayers();
+      setPlayers(mockPlayers);
     } catch (err) {
-      console.error('Error en búsqueda:', err);
-      setError('No se pudieron cargar los resultados. Intenta nuevamente.');
-      setSearchResults([]);
+      console.error("Error loading players:", err);
+      setError(err.message || "Error al cargar jugadores");
     } finally {
       setLoading(false);
     }
   };
 
-  // Limpiar la búsqueda
-  const clearSearch = () => {
-    setSearchQuery('');
-    setSearchResults([]);
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadPlayers();
+    setRefreshing(false);
   };
 
-  // Activar/desactivar la búsqueda
-  const toggleSearch = () => {
-    setIsSearchActive(!isSearchActive);
-    if (isSearchActive) {
-      setSearchQuery('');
-      setSearchResults([]);
+  const handleSearch = async (query) => {
+    setSearchQuery(query);
+    
+    if (query.length >= 3) {
+      try {
+        setSearchLoading(true);
+        const results = await searchPlayers(query);
+        setPlayers(results.players || []);
+      } catch (err) {
+        console.error("Error searching players:", err);
+        // Continue with local filtering
+      } finally {
+        setSearchLoading(false);
+      }
+    } else if (query.length === 0) {
+      // Reset to all players
+      await loadPlayers();
     }
   };
 
-  // Navegar a la página de detalle del jugador
-  const navigateToPlayerDetail = (playerId) => {
+  const applyFiltersAndSort = () => {
+    let result = [...players];
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        (player) =>
+          player.name?.toLowerCase().includes(query) ||
+          player.team?.toLowerCase().includes(query) ||
+          player.position?.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply filters
+    if (activeFilters.position && activeFilters.position.length > 0) {
+      result = result.filter((player) =>
+        activeFilters.position.includes(player.position)
+      );
+    }
+
+    if (activeFilters.league) {
+      result = result.filter((player) => player.league === activeFilters.league);
+    }
+
+    if (activeFilters.nationality && activeFilters.nationality.length > 0) {
+      result = result.filter((player) =>
+        activeFilters.nationality.includes(player.nationality)
+      );
+    }
+
+    if (activeFilters.minAge) {
+      result = result.filter((player) => player.age >= parseInt(activeFilters.minAge));
+    }
+
+    if (activeFilters.maxAge) {
+      result = result.filter((player) => player.age <= parseInt(activeFilters.maxAge));
+    }
+
+    // Apply sorting
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return (a.name || "").localeCompare(b.name || "");
+        case "rating":
+          return (b.rating || 0) - (a.rating || 0);
+        case "goals":
+          return (b.goals || 0) - (a.goals || 0);
+        case "assists":
+          return (b.assists || 0) - (a.assists || 0);
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredPlayers(result);
+  };
+
+  const handleApplyFilters = (filters) => {
+    setActiveFilters(filters);
+  };
+
+  const getActiveFiltersCount = () => {
+    return Object.keys(activeFilters).filter((key) => {
+      const value = activeFilters[key];
+      return (
+        value !== undefined &&
+        value !== null &&
+        value !== "" &&
+        !(Array.isArray(value) && value.length === 0)
+      );
+    }).length;
+  };
+
+  const handlePlayerPress = (playerId) => {
     router.push(`/player/${playerId}`);
   };
 
-  // Renderizar cada jugador en la lista
-  const renderPlayerItem = ({ item }) => (
-    <TouchableOpacity 
-      style={styles.playerCard}
-      onPress={() => navigateToPlayerDetail(item.id)}
-    >
-      <Image 
-        source={{ uri: item.photo || 'https://via.placeholder.com/100?text=?' }} 
-        style={styles.playerImage} 
-      />
-      <View style={styles.playerInfo}>
-        <Text style={styles.playerName}>{item.name}</Text>
-        <Text style={styles.playerDetails}>
-          {item.position || 'Jugador'} 
-          {item.nationality && ` • ${item.nationality}`}
-        </Text>
-        {item.Team && (
-          <View style={styles.teamInfo}>
-            {item.Team.logo && (
-              <Image 
-                source={{ uri: item.Team.logo }} 
-                style={styles.teamLogo} 
-              />
-            )}
-            <Text style={styles.teamName}>{item.Team.name}</Text>
-          </View>
-        )}
-      </View>
-    </TouchableOpacity>
+  const renderPlayerCard = ({ item }) => (
+    <PlayerCard
+      player={item}
+      onPress={() => handlePlayerPress(item.id)}
+      style={{ flex: numColumns > 1 ? 1 / numColumns : 1 }}
+    />
   );
 
-  // Renderizar contenido principal
-  const renderContent = () => {
-    if (loading) {
-      return (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#00ff87" />
-          <Text style={styles.loadingText}>Buscando jugadores...</Text>
-        </View>
-      );
-    }
-
-    if (error) {
-      return (
-        <View style={styles.centerContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      );
-    }
-
-    if (searchQuery.trim().length >= 3 && searchResults.length === 0) {
-      return (
-        <View style={styles.centerContainer}>
-          <Text style={styles.noResultsText}>No se encontraron jugadores que coincidan con "{searchQuery}"</Text>
-        </View>
-      );
-    }
-
-    if (searchResults.length > 0) {
-      return (
-        <FlatList
-          data={searchResults}
-          keyExtractor={(item, index) => item.id?.toString() || index.toString()}
-          renderItem={renderPlayerItem}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <Text style={styles.title}>Jugadores</Text>
+      
+      {/* Search */}
+      <View style={styles.searchContainer}>
+        <Input
+          placeholder="Buscar jugadores..."
+          value={searchQuery}
+          onChangeText={handleSearch}
+          clearable
+          style={styles.searchInput}
         />
-      );
-    }
-
-    // Estado inicial o búsqueda vacía
-    return (
-      <View style={styles.centerContainer}>
-        <Search size={50} color="#333" style={styles.searchIcon} />
-        <Text style={styles.searchPrompt}>Busca jugadores por nombre</Text>
-        <Text style={styles.searchHint}>Ingresa al menos 3 caracteres para comenzar la búsqueda</Text>
       </View>
+
+      {/* Filter and Sort Bar */}
+      <View style={styles.actionBar}>
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={() => setFilterModalVisible(true)}
+        >
+          <Filter size={20} color={colors.text.primary} />
+          <Text style={styles.filterButtonText}>Filtros</Text>
+          {getActiveFiltersCount() > 0 && (
+            <Badge size="sm" variant="success">
+              {getActiveFiltersCount()}
+            </Badge>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.sortButton}
+          onPress={() => setSortMenuVisible(!sortMenuVisible)}
+        >
+          <Text style={styles.sortButtonText}>
+            {SORT_OPTIONS.find((opt) => opt.id === sortBy)?.label || "Ordenar"}
+          </Text>
+          <ChevronDown size={16} color={colors.text.secondary} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Sort Menu */}
+      {sortMenuVisible && (
+        <View style={styles.sortMenu}>
+          {SORT_OPTIONS.map((option) => (
+            <TouchableOpacity
+              key={option.id}
+              style={[
+                styles.sortOption,
+                sortBy === option.id && styles.sortOptionActive,
+              ]}
+              onPress={() => {
+                setSortBy(option.id);
+                setSortMenuVisible(false);
+              }}
+            >
+              <Text
+                style={[
+                  styles.sortOptionText,
+                  sortBy === option.id && styles.sortOptionTextActive,
+                ]}
+              >
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      {/* Results Count */}
+      <Text style={styles.resultsCount}>
+        {filteredPlayers.length} jugador{filteredPlayers.length !== 1 ? "es" : ""}
+      </Text>
+    </View>
+  );
+
+  if (loading && !refreshing) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <LoadingState message="Cargando jugadores..." />
+      </SafeAreaView>
     );
-  };
+  }
+
+  if (error && !refreshing) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ErrorState
+          title="Error al cargar jugadores"
+          message={error}
+          onRetry={loadPlayers}
+        />
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        {/* Header con búsqueda */}
-        <View style={styles.header}>
-          {isSearchActive ? (
-            <View style={styles.searchContainer}>
-              <View style={styles.searchInputContainer}>
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder="Buscar jugadores..."
-                  placeholderTextColor="#888"
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  autoFocus
-                />
-                {searchQuery.length > 0 && (
-                  <TouchableOpacity onPress={clearSearch} style={styles.searchClearButton}>
-                    <X size={16} color="#888" />
-                  </TouchableOpacity>
-                )}
-              </View>
-              <TouchableOpacity onPress={toggleSearch} style={styles.searchButton}>
-                <X size={22} color="#00ff87" />
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <>
-              <Text style={styles.headerTitle}>Jugadores</Text>
-              <TouchableOpacity style={styles.searchButton} onPress={toggleSearch}>
-                <Search size={22} color="#00ff87" />
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
+    <SafeAreaView style={styles.container}>
+      <FlatList
+        data={filteredPlayers}
+        renderItem={renderPlayerCard}
+        keyExtractor={(item) => item.id.toString()}
+        numColumns={numColumns}
+        key={numColumns}
+        ListHeaderComponent={renderHeader}
+        ListEmptyComponent={
+          <EmptyState
+            icon="users"
+            title="No se encontraron jugadores"
+            message={
+              searchQuery || getActiveFiltersCount() > 0
+                ? "Intenta ajustar tu búsqueda o filtros"
+                : "No hay jugadores disponibles"
+            }
+          />
+        }
+        contentContainerStyle={styles.listContent}
+        columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : null}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
+      />
 
-        {/* Contenido principal */}
-        {renderContent()}
-      </View>
+      {/* Filter Modal */}
+      <FilterPanel
+        visible={filterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        onApplyFilters={handleApplyFilters}
+        filterOptions={getFilterOptions()}
+        initialFilters={activeFilters}
+        entityType="player"
+      />
     </SafeAreaView>
   );
 }
 
+// Player Card Component
+const PlayerCard = ({ player, onPress, style }) => {
+  const scaleAnim = new Animated.Value(1);
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <Animated.View
+      style={[
+        styles.playerCardContainer,
+        style,
+        { transform: [{ scale: scaleAnim }] },
+      ]}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={0.9}
+      >
+        <Card variant="elevated" padding="md" style={styles.playerCard}>
+          <View style={styles.playerCardContent}>
+            <PlayerAvatar
+              uri={player.photo}
+              name={player.name}
+              size="lg"
+              border
+            />
+            
+            <View style={styles.playerInfo}>
+              <Text style={styles.playerName} numberOfLines={1}>
+                {player.name}
+              </Text>
+              <Text style={styles.playerTeam} numberOfLines={1}>
+                {player.team}
+              </Text>
+              <Text style={styles.playerPosition}>{player.position}</Text>
+            </View>
+
+            <View style={styles.playerStats}>
+              {player.rating && (
+                <View style={styles.statItem}>
+                  <Text style={styles.statLabel}>Rating</Text>
+                  <Text style={styles.statValue}>{player.rating}</Text>
+                </View>
+              )}
+              {player.goals !== undefined && (
+                <View style={styles.statItem}>
+                  <Text style={styles.statLabel}>Goles</Text>
+                  <Text style={styles.statValue}>{player.goals}</Text>
+                </View>
+              )}
+              {player.assists !== undefined && (
+                <View style={styles.statItem}>
+                  <Text style={styles.statLabel}>Asist.</Text>
+                  <Text style={styles.statValue}>{player.assists}</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        </Card>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
+// Helper functions
+const generateMockPlayers = () => {
+  const positions = ["Portero", "Defensa", "Centrocampista", "Delantero"];
+  const teams = [
+    "Real Madrid",
+    "Barcelona",
+    "Atlético Madrid",
+    "Sevilla",
+    "Valencia",
+    "Athletic Bilbao",
+  ];
+  const nationalities = ["España", "Argentina", "Brasil", "Francia", "Alemania"];
+  const leagues = ["La Liga", "Premier League", "Serie A", "Bundesliga"];
+
+  return Array.from({ length: 50 }, (_, i) => ({
+    id: i + 1,
+    name: `Jugador ${i + 1}`,
+    photo: `https://via.placeholder.com/150?text=P${i + 1}`,
+    team: teams[Math.floor(Math.random() * teams.length)],
+    position: positions[Math.floor(Math.random() * positions.length)],
+    nationality: nationalities[Math.floor(Math.random() * nationalities.length)],
+    league: leagues[Math.floor(Math.random() * leagues.length)],
+    age: 18 + Math.floor(Math.random() * 20),
+    rating: (6 + Math.random() * 3).toFixed(1),
+    goals: Math.floor(Math.random() * 30),
+    assists: Math.floor(Math.random() * 20),
+  }));
+};
+
+const getFilterOptions = () => {
+  return {
+    positions: [
+      { id: "Portero", name: "Portero" },
+      { id: "Defensa", name: "Defensa" },
+      { id: "Centrocampista", name: "Centrocampista" },
+      { id: "Delantero", name: "Delantero" },
+    ],
+    leagues: [
+      { id: "La Liga", name: "La Liga" },
+      { id: "Premier League", name: "Premier League" },
+      { id: "Serie A", name: "Serie A" },
+      { id: "Bundesliga", name: "Bundesliga" },
+    ],
+    nationalities: [
+      { id: "España", name: "España" },
+      { id: "Argentina", name: "Argentina" },
+      { id: "Brasil", name: "Brasil" },
+      { id: "Francia", name: "Francia" },
+      { id: "Alemania", name: "Alemania" },
+    ],
+  };
+};
+
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#121212',
-  },
   container: {
     flex: 1,
-    backgroundColor: '#121212',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#1a1a1a',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
-    height: 60,
-  },
-  headerTitle: {
-    color: '#00ff87',
-    fontSize: 20,
-    fontFamily: 'Inter_700Bold',
-  },
-  searchButton: {
-    padding: 8,
-  },
-  searchContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  searchInputContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#232323',
-    borderRadius: 20,
-    marginRight: 8,
-    height: 40,
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    paddingHorizontal: 16,
-    color: '#fff',
-    fontFamily: 'Inter_400Regular',
-  },
-  searchClearButton: {
-    padding: 8,
-    marginRight: 4,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  searchIcon: {
-    marginBottom: 20,
-    opacity: 0.5,
-  },
-  searchPrompt: {
-    color: '#fff',
-    fontSize: 18,
-    fontFamily: 'Inter_600SemiBold',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  searchHint: {
-    color: '#888',
-    fontSize: 14,
-    fontFamily: 'Inter_400Regular',
-    textAlign: 'center',
-  },
-  loadingText: {
-    color: '#888',
-    marginTop: 16,
-    fontSize: 14,
-    fontFamily: 'Inter_500Medium',
-  },
-  errorText: {
-    color: '#ff6b6b',
-    fontSize: 16,
-    textAlign: 'center',
-    fontFamily: 'Inter_400Regular',
-  },
-  noResultsText: {
-    color: '#888',
-    fontSize: 16,
-    textAlign: 'center',
-    fontFamily: 'Inter_400Regular',
+    backgroundColor: colors.background.primary,
   },
   listContent: {
-    padding: 16,
+    flexGrow: 1,
+    paddingBottom: spacing.xl,
+  },
+  columnWrapper: {
+    paddingHorizontal: spacing.base,
+    gap: spacing.base,
+  },
+  header: {
+    paddingHorizontal: spacing.base,
+    paddingTop: spacing.base,
+    paddingBottom: spacing.md,
+  },
+  title: {
+    fontSize: typography.fontSize["3xl"],
+    fontFamily: typography.fontFamily.bold,
+    color: colors.text.primary,
+    marginBottom: spacing.base,
+  },
+  searchContainer: {
+    marginBottom: spacing.md,
+  },
+  searchInput: {
+    marginBottom: 0,
+  },
+  actionBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.md,
+  },
+  filterButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.background.tertiary,
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.base,
+    gap: spacing.sm,
+  },
+  filterButtonText: {
+    color: colors.text.primary,
+    fontSize: typography.fontSize.base,
+    fontFamily: typography.fontFamily.medium,
+  },
+  sortButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.background.tertiary,
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.base,
+    gap: spacing.xs,
+  },
+  sortButtonText: {
+    color: colors.text.primary,
+    fontSize: typography.fontSize.base,
+    fontFamily: typography.fontFamily.medium,
+  },
+  sortMenu: {
+    backgroundColor: colors.background.elevated,
+    borderRadius: borderRadius.base,
+    marginBottom: spacing.md,
+    overflow: "hidden",
+    ...shadows.md,
+  },
+  sortOption: {
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.light,
+  },
+  sortOptionActive: {
+    backgroundColor: colors.background.tertiary,
+  },
+  sortOptionText: {
+    color: colors.text.secondary,
+    fontSize: typography.fontSize.base,
+    fontFamily: typography.fontFamily.regular,
+  },
+  sortOptionTextActive: {
+    color: colors.primary,
+    fontFamily: typography.fontFamily.semiBold,
+  },
+  resultsCount: {
+    color: colors.text.tertiary,
+    fontSize: typography.fontSize.sm,
+    fontFamily: typography.fontFamily.regular,
+  },
+  playerCardContainer: {
+    padding: spacing.xs,
   },
   playerCard: {
-    flexDirection: 'row',
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-    alignItems: 'center',
+    marginBottom: 0,
   },
-  playerImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#252525',
+  playerCardContent: {
+    alignItems: "center",
   },
   playerInfo: {
-    flex: 1,
-    marginLeft: 16,
+    alignItems: "center",
+    marginTop: spacing.md,
+    width: "100%",
   },
   playerName: {
-    color: '#fff',
-    fontSize: 16,
-    fontFamily: 'Inter_600SemiBold',
-    marginBottom: 4,
+    fontSize: typography.fontSize.md,
+    fontFamily: typography.fontFamily.semiBold,
+    color: colors.text.primary,
+    marginBottom: spacing.xs,
   },
-  playerDetails: {
-    color: '#888',
-    fontSize: 14,
-    fontFamily: 'Inter_400Regular',
-    marginBottom: 6,
+  playerTeam: {
+    fontSize: typography.fontSize.sm,
+    fontFamily: typography.fontFamily.regular,
+    color: colors.text.secondary,
+    marginBottom: spacing.xs,
   },
-  teamInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  playerPosition: {
+    fontSize: typography.fontSize.sm,
+    fontFamily: typography.fontFamily.regular,
+    color: colors.text.tertiary,
   },
-  teamLogo: {
-    width: 20,
-    height: 20,
-    marginRight: 6,
+  playerStats: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.light,
   },
-  teamName: {
-    color: '#00ff87',
-    fontSize: 13,
-    fontFamily: 'Inter_500Medium',
+  statItem: {
+    alignItems: "center",
+  },
+  statLabel: {
+    fontSize: typography.fontSize.xs,
+    fontFamily: typography.fontFamily.regular,
+    color: colors.text.tertiary,
+    marginBottom: spacing.xs,
+  },
+  statValue: {
+    fontSize: typography.fontSize.md,
+    fontFamily: typography.fontFamily.semiBold,
+    color: colors.primary,
   },
 });

@@ -1,8 +1,17 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLeagues } from '../../hooks/useLeagues';
 import { useState, useEffect } from 'react';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import Badge from '../../components/ui/Badge';
+import LoadingState from '../../components/ui/LoadingState';
+import ErrorState from '../../components/ui/ErrorState';
+import PlayerAvatar from '../../components/PlayerAvatar';
+import TeamLogo from '../../components/TeamLogo';
+import { colors, typography, spacing, borderRadius } from '../../styles/theme';
+import { useResponsiveValue, useIsTablet, useGridColumns } from '../../utils/responsive';
 
 const FALLBACK_LEAGUES = [
   {
@@ -48,6 +57,12 @@ export default function LeaguesScreen() {
   const { leagues, loading, error } = useLeagues();
   const [displayLeagues, setDisplayLeagues] = useState([]);
   const [processedLeagues, setProcessedLeagues] = useState([]);
+  
+  // Responsive values
+  const isTablet = useIsTablet();
+  const numColumns = useGridColumns();
+  const containerPadding = useResponsiveValue({ base: spacing.base, md: spacing.xl });
+  const cardMargin = useResponsiveValue({ base: spacing.base, md: spacing.lg });
 
   useEffect(() => {
     if (leagues && leagues.length > 0) {
@@ -56,20 +71,21 @@ export default function LeaguesScreen() {
         // Ensure we have a proper logo
         const logo = league.logo || league.image || 'https://placehold.co/100?text=League';
         
-        // If there's no topScorer or standings, use defaults
+        // Use real data from backend, don't use fallback data
         return {
           ...league,
           logo,
           teams: league.teams || league.teamCount || 20,
           matches: league.matches || league.matchCount || 380,
-          topScorer: league.topScorer || FALLBACK_LEAGUES[0].topScorer,
-          standings: league.standings || FALLBACK_LEAGUES[0].standings
+          topScorer: league.topScorer || null, // Don't use fallback
+          standings: league.standings || [] // Don't use fallback
         };
       });
       
       setProcessedLeagues(processed);
       setDisplayLeagues(processed);
     } else {
+      // Only use fallback if no leagues at all
       setProcessedLeagues(FALLBACK_LEAGUES);
       setDisplayLeagues(FALLBACK_LEAGUES);
     }
@@ -77,119 +93,155 @@ export default function LeaguesScreen() {
 
   // Function to retry loading if error occurs
   const handleRetry = () => {
-    window.location.reload();
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
   };
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#00ff87" />
-        <Text style={styles.loadingText}>Loading leagues...</Text>
+      <View style={styles.container}>
+        <Text style={styles.pageTitle}>Top Leagues</Text>
+        <LoadingState message="Cargando ligas..." />
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Unable to load leagues</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
-          <Text style={styles.retryText}>Retry</Text>
-        </TouchableOpacity>
+      <View style={styles.container}>
+        <Text style={styles.pageTitle}>Top Leagues</Text>
+        <ErrorState
+          title="Error al cargar ligas"
+          message="No se pudieron cargar las ligas. Por favor, intenta de nuevo."
+          onRetry={handleRetry}
+        />
       </View>
     );
   }
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.pageTitle}>Top Leagues</Text>
-      {displayLeagues.map(league => (
-        <TouchableOpacity 
-          key={league.id} 
-          style={styles.leagueSection}
-          onPress={() => router.push(`/league/${league.id}`)}
-          activeOpacity={0.9}
-        >
-          <LinearGradient
-            colors={['#2a2a2a', '#1a1a1a']}
-            style={styles.gradientBackground}
+      <Text style={[styles.pageTitle, { paddingHorizontal: containerPadding }]}>Top Leagues</Text>
+      <View style={[
+        styles.leaguesGrid,
+        isTablet && styles.leaguesGridTablet,
+        { paddingHorizontal: containerPadding }
+      ]}>
+        {displayLeagues.map(league => (
+          <View 
+            key={league.id}
+            style={[
+              styles.leagueCardWrapper,
+              isTablet && { width: numColumns === 2 ? '48%' : '31%' }
+            ]}
           >
-            <View style={styles.leagueHeader}>
-              <Image 
-                source={{ uri: league.logo }} 
-                style={styles.leagueLogo} 
-                defaultSource={{ uri: 'https://placehold.co/100x100?text=League' }}
-              />
-              <View style={styles.leagueInfo}>
-                <Text style={styles.leagueName}>{league.name}</Text>
-                <Text style={styles.countryName}>{league.country}</Text>
-              </View>
-              <View style={styles.leagueStats}>
-                <Text style={styles.statText}>{league.teams} Teams</Text>
-                <Text style={styles.statText}>{league.matches} Matches</Text>
-              </View>
-            </View>
-
-            {/* Top Scorer Section */}
-            {league.topScorer && (
-              <View style={styles.topScorerSection}>
-                <Text style={styles.sectionTitle}>Top Scorer</Text>
-                <TouchableOpacity 
-                  style={styles.topScorerContent}
-                  onPress={() => router.push(`/player/${league.topScorer.id || 1}`)}
-                >
-                  <Image 
-                    source={{ uri: league.topScorer.image }} 
-                    style={styles.playerImage}
-                    defaultSource={{ uri: 'https://placehold.co/100x100?text=Player' }}
+            <Card
+              variant="elevated"
+              padding="md"
+              pressable
+              onPress={() => router.push(`/league/${league.id}`)}
+              style={[styles.leagueCard, { marginBottom: cardMargin }]}
+            >
+              <LinearGradient
+                colors={['rgba(0, 255, 135, 0.08)', 'rgba(0, 255, 135, 0.02)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.gradientOverlay}
+              >
+                {/* League Header */}
+                <View style={styles.leagueHeader}>
+                  <TeamLogo 
+                    uri={league.logo}
+                    size="lg"
+                    rounded
                   />
-                  <View style={styles.playerInfo}>
-                    <Text style={styles.playerName}>{league.topScorer.name}</Text>
-                    <Text style={styles.goalsText}>{league.topScorer.goals} Goals</Text>
+                  <View style={styles.leagueInfo}>
+                    <Text style={styles.leagueName}>{league.name}</Text>
+                    <Text style={styles.countryName}>{league.country}</Text>
                   </View>
-                  <View style={styles.viewProfileBadge}>
-                    <Text style={styles.viewProfileText}>Perfil</Text>
+                  <View style={styles.leagueStats}>
+                    <Text style={styles.statText}>{league.teams} Teams</Text>
+                    <Text style={styles.statText}>{league.matches} Matches</Text>
                   </View>
-                </TouchableOpacity>
-              </View>
-            )}
+                </View>
 
-            {/* Standings Section */}
-            {league.standings && league.standings.length > 0 && (
-              <View style={styles.standingsSection}>
-                <Text style={styles.sectionTitle}>Top 3</Text>
-                {league.standings.slice(0, 3).map((team, index) => (
-                  <TouchableOpacity 
-                    key={index} 
-                    style={styles.standingRow}
-                    onPress={() => router.push(`/team/${team.teamId || index + 1}`)}
-                  >
-                    <View style={styles.positionBadge}>
-                      <Text style={styles.positionText}>#{team.position || index + 1}</Text>
-                    </View>
-                    <Image 
-                      source={{ uri: team.logo }} 
-                      style={styles.teamLogo}
-                      defaultSource={{ uri: 'https://placehold.co/100x100?text=Team' }}
-                    />
-                    <Text style={styles.teamName}>{team.team}</Text>
-                    <View style={styles.pointsContainer}>
-                      <Text style={styles.points}>{team.points}</Text>
-                      <Text style={styles.pointsLabel}>pts</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-                <TouchableOpacity 
-                  style={styles.viewMoreButton}
-                  onPress={() => router.push(`/league/${league.id}`)}
-                >
-                  <Text style={styles.viewMoreText}>View Full Table</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
-      ))}
+                {/* Top Scorer Section */}
+                {league.topScorer && (
+                  <View style={styles.topScorerSection}>
+                    <Text style={styles.sectionTitle}>Top Scorer</Text>
+                    <TouchableOpacity 
+                      style={styles.topScorerContent}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        router.push(`/player/${league.topScorer.id || 1}`);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <PlayerAvatar 
+                        uri={league.topScorer.image}
+                        name={league.topScorer.name}
+                        size="md"
+                        border
+                      />
+                      <View style={styles.playerInfo}>
+                        <Text style={styles.playerName}>{league.topScorer.name}</Text>
+                        <Text style={styles.goalsText}>{league.topScorer.goals} Goals</Text>
+                      </View>
+                      <Badge variant="success" size="sm" rounded>
+                        Perfil
+                      </Badge>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {/* Standings Section */}
+                {league.standings && league.standings.length > 0 && (
+                  <View style={styles.standingsSection}>
+                    <Text style={styles.sectionTitle}>Top 3</Text>
+                    {league.standings.slice(0, 3).map((team, index) => (
+                      <TouchableOpacity 
+                        key={index} 
+                        style={styles.standingRow}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          router.push(`/team/${team.teamId || index + 1}`);
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.positionBadge}>
+                          <Text style={styles.positionText}>#{team.position || index + 1}</Text>
+                        </View>
+                        <TeamLogo 
+                          uri={team.logo}
+                          size="sm"
+                          rounded
+                        />
+                        <Text style={styles.teamName}>{team.team}</Text>
+                        <View style={styles.pointsContainer}>
+                          <Text style={styles.points}>{team.points}</Text>
+                          <Text style={styles.pointsLabel}>pts</Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="md"
+                      onPress={(e) => {
+                        e?.stopPropagation?.();
+                        router.push(`/league/${league.id}`);
+                      }}
+                      style={styles.viewMoreButton}
+                    >
+                      View Full Table
+                    </Button>
+                  </View>
+                )}
+              </LinearGradient>
+            </Card>
+          </View>
+        ))}
+      </View>
     </ScrollView>
   );
 }
@@ -197,233 +249,158 @@ export default function LeaguesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0c0c0c',
-    paddingTop: 8,
-  },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: '#0c0c0c',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  loadingText: {
-    color: '#fff',
-    marginTop: 16,
-    fontSize: 16,
-    fontFamily: 'Inter_500Medium',
-  },
-  errorContainer: {
-    flex: 1,
-    backgroundColor: '#0c0c0c',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorText: {
-    color: '#fff',
-    fontSize: 16,
-    marginBottom: 16,
-    fontFamily: 'Inter_500Medium',
-  },
-  retryButton: {
-    backgroundColor: '#333',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-  },
-  retryText: {
-    color: '#fff',
-    fontSize: 14,
-    fontFamily: 'Inter_600SemiBold',
+    backgroundColor: colors.background.primary,
+    paddingTop: spacing.sm,
   },
   pageTitle: {
-    color: '#fff',
-    fontSize: 24,
-    fontFamily: 'Inter_700Bold',
-    marginBottom: 16,
-    marginTop: 8,
-    paddingHorizontal: 16,
+    color: colors.text.primary,
+    fontSize: typography.fontSize['2xl'],
+    fontFamily: typography.fontFamily.bold,
+    marginBottom: spacing.base,
+    marginTop: spacing.sm,
   },
-  leagueSection: {
-    marginBottom: 16,
-    borderRadius: 16,
+  leaguesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  leaguesGridTablet: {
+    gap: spacing.base,
+  },
+  leagueCardWrapper: {
+    width: '100%',
+  },
+  leagueCard: {
     overflow: 'hidden',
-    marginHorizontal: 16,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
   },
-  gradientBackground: {
-    borderRadius: 16,
+  gradientOverlay: {
+    borderRadius: borderRadius.md,
     overflow: 'hidden',
   },
   leagueHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    paddingBottom: spacing.base,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
-  },
-  leagueLogo: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 2,
-    borderColor: '#333',
+    borderBottomColor: colors.border.light,
   },
   leagueInfo: {
-    marginLeft: 16,
+    marginLeft: spacing.base,
     flex: 1,
   },
   leagueName: {
-    color: '#fff',
-    fontSize: 18,
-    fontFamily: 'Inter_700Bold',
+    color: colors.text.primary,
+    fontSize: typography.fontSize.lg,
+    fontFamily: typography.fontFamily.bold,
   },
   countryName: {
-    color: '#aaa',
-    fontSize: 14,
-    marginTop: 4,
-    fontFamily: 'Inter_400Regular',
+    color: colors.text.tertiary,
+    fontSize: typography.fontSize.base,
+    marginTop: spacing.xs,
+    fontFamily: typography.fontFamily.regular,
   },
   leagueStats: {
     alignItems: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    padding: 8,
-    borderRadius: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    padding: spacing.sm,
+    borderRadius: borderRadius.base,
   },
   statText: {
-    color: '#aaa',
-    fontSize: 12,
-    fontFamily: 'Inter_500Medium',
+    color: colors.text.tertiary,
+    fontSize: typography.fontSize.sm,
+    fontFamily: typography.fontFamily.medium,
   },
   topScorerSection: {
-    padding: 16,
+    paddingTop: spacing.base,
+    paddingBottom: spacing.base,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
-    backgroundColor: 'rgba(0,0,0,0.1)',
+    borderBottomColor: colors.border.light,
   },
   sectionTitle: {
-    color: '#00ff87',
-    fontSize: 16,
-    marginBottom: 12,
-    fontFamily: 'Inter_600SemiBold',
+    color: colors.primary,
+    fontSize: typography.fontSize.md,
+    marginBottom: spacing.md,
+    fontFamily: typography.fontFamily.semiBold,
   },
   topScorerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,255,135,0.05)',
-    padding: 10,
-    borderRadius: 12,
-    justifyContent: 'space-between',
-  },
-  viewProfileBadge: {
-    backgroundColor: 'rgba(0,255,135,0.2)',
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-    marginLeft: 8,
-  },
-  viewProfileText: {
-    color: '#00ff87',
-    fontSize: 12,
-    fontFamily: 'Inter_500Medium',
-  },
-  playerImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: '#00ff87',
+    backgroundColor: 'rgba(0, 255, 135, 0.08)',
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.15)',
   },
   playerInfo: {
-    marginLeft: 12,
+    marginLeft: spacing.md,
+    flex: 1,
   },
   playerName: {
-    color: '#fff',
-    fontSize: 16,
-    fontFamily: 'Inter_600SemiBold',
+    color: colors.text.primary,
+    fontSize: typography.fontSize.md,
+    fontFamily: typography.fontFamily.semiBold,
   },
   goalsText: {
-    color: '#00ff87',
-    fontSize: 14,
-    marginTop: 4,
-    fontFamily: 'Inter_500Medium',
+    color: colors.primary,
+    fontSize: typography.fontSize.base,
+    marginTop: spacing.xs,
+    fontFamily: typography.fontFamily.medium,
   },
   standingsSection: {
-    padding: 16,
+    paddingTop: spacing.base,
   },
   standingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    padding: 10,
-    borderRadius: 8,
+    marginBottom: spacing.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    padding: spacing.md,
+    borderRadius: borderRadius.base,
+    borderWidth: 1,
+    borderColor: colors.border.light,
   },
   positionBadge: {
     width: 28,
     height: 28,
-    borderRadius: 14,
-    backgroundColor: '#333',
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.background.tertiary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8,
+    marginRight: spacing.sm,
   },
   positionText: {
-    color: '#fff',
-    fontSize: 12,
-    fontFamily: 'Inter_600SemiBold',
-  },
-  teamLogo: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    marginRight: 12,
-    borderWidth: 1,
-    borderColor: '#444',
+    color: colors.text.primary,
+    fontSize: typography.fontSize.sm,
+    fontFamily: typography.fontFamily.semiBold,
   },
   teamName: {
-    color: '#fff',
+    color: colors.text.primary,
     flex: 1,
-    fontSize: 14,
-    fontFamily: 'Inter_500Medium',
+    fontSize: typography.fontSize.base,
+    fontFamily: typography.fontFamily.medium,
+    marginLeft: spacing.md,
   },
   pointsContainer: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    backgroundColor: 'rgba(0,255,135,0.1)',
-    padding: 6,
-    paddingHorizontal: 10,
-    borderRadius: 12,
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.md,
   },
   points: {
-    color: '#00ff87',
-    fontSize: 16,
-    fontFamily: 'Inter_700Bold',
+    color: colors.primary,
+    fontSize: typography.fontSize.md,
+    fontFamily: typography.fontFamily.bold,
     marginRight: 2,
   },
   pointsLabel: {
-    color: '#00ff87',
-    fontSize: 10,
-    fontFamily: 'Inter_400Regular',
-    opacity: 0.7,
+    color: colors.primary,
+    fontSize: typography.fontSize.xs,
+    fontFamily: typography.fontFamily.regular,
+    opacity: 0.8,
   },
   viewMoreButton: {
-    backgroundColor: 'rgba(0,255,135,0.15)',
-    padding: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: '#00ff8730',
-  },
-  viewMoreText: {
-    color: '#00ff87',
-    fontSize: 14,
-    fontFamily: 'Inter_600SemiBold',
+    marginTop: spacing.md,
   },
 });
